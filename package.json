@@ -1,0 +1,25 @@
+{
+  "name": "howismyip-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Multi-source IP intelligence — how good (or shady) is an IP, according to many sources at once.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "packageManager": "pnpm@11.5.2",
+  "scripts": {
+    "build": "pnpm -r build",
+    "dev": "pnpm --filter @howismyip/web dev",
+    "test": "pnpm -r test",
+    "check": "biome check packages/",
+    "format": "biome check --write packages/"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4",
+    "@types/node": "^22.19.21",
+    "typescript": "^5.8.3",
+    "ultracite": "^4.2.1"
+  }
+}

@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.output/
+.nitro/
+.tanstack/
+.vinxi/
+*.local
+.env
+.env.*
+!.env.example
+.DS_Store
+*.log
+coverage/
+.wrangler/

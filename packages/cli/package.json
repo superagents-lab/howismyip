@@ -1,0 +1,23 @@
+{
+  "name": "@howismyip/cli",
+  "version": "0.1.0",
+  "description": "Query an IP's reputation across many sources from your terminal — the howismyip CLI.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "howismyip": "./dist/bin.js"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "node --import tsx src/bin.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@howismyip/core": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.8.3"
+  }
+}

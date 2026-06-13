@@ -1,0 +1,9 @@
+packages:
+  - 'packages/*'
+  - 'apps/*'
+allowBuilds:
+  '@biomejs/biome': true
+  esbuild: true
+  lightningcss: true
+  sharp: false
+  workerd: true

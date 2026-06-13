@@ -1,0 +1,95 @@
+@import "tailwindcss";
+
+/* ── howismyip terminal theme ─────────────────────────────────────────────
+   Phosphor-on-black, monospace everywhere, a faint CRT scanline wash. */
+@theme {
+  --font-mono: "JetBrains Mono", "IBM Plex Mono", "SFMono-Regular", ui-monospace,
+    "Menlo", "Consolas", monospace;
+
+  --color-bg: #07090a;
+  --color-panel: #0d1113;
+  --color-panel-2: #11161a;
+  --color-border: #1d262b;
+  --color-fg: #c8d3cf;
+  --color-muted: #6c7d77;
+  --color-phosphor: #36f9a0; /* primary accent: terminal green */
+  --color-phosphor-dim: #1f8f5e;
+  --color-amber: #ffb454; /* warnings */
+  --color-danger: #ff5d62; /* high risk */
+  --color-cyan: #56c8d8; /* network/registry accents */
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Subtle scanlines over the whole document. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0px,
+    rgba(0, 0, 0, 0) 2px,
+    rgba(0, 0, 0, 0.22) 3px,
+    rgba(0, 0, 0, 0) 4px
+  );
+  mix-blend-mode: multiply;
+  opacity: 0.5;
+}
+
+a {
+  color: var(--color-phosphor);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Blinking block cursor for the prompt. */
+@keyframes blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+.cursor::after {
+  content: "▋";
+  margin-left: 2px;
+  color: var(--color-phosphor);
+  animation: blink 1.05s steps(1) infinite;
+}
+
+::selection {
+  background: var(--color-phosphor);
+  color: var(--color-bg);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
