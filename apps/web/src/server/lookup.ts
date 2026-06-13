@@ -47,7 +47,7 @@ export interface SelfLookup {
 
 /** Our egress IP via a public echo service — the fallback when request headers
  *  don't carry a usable public IP (local dev, missing proxy headers). */
-async function fetchEgressIp(): Promise<string | null> {
+export async function fetchEgressIp(): Promise<string | null> {
 	try {
 		const res = await fetch("https://api.ipify.org?format=json");
 		if (!res.ok) {
