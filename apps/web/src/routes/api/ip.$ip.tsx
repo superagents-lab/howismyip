@@ -1,5 +1,6 @@
 import { InvalidIpError, lookupIp } from "@howismyip/core";
 import { createFileRoute } from "@tanstack/react-router";
+import { withResponseCache } from "../../server/api-cache";
 
 const CORS = { "access-control-allow-origin": "*" } as const;
 
@@ -7,23 +8,24 @@ const CORS = { "access-control-allow-origin": "*" } as const;
 export const Route = createFileRoute("/api/ip/$ip")({
 	server: {
 		handlers: {
-			GET: async ({ params }) => {
-				try {
-					const report = await lookupIp(params.ip);
-					return Response.json(report, { headers: CORS });
-				} catch (err) {
-					if (err instanceof InvalidIpError) {
+			GET: ({ params }) =>
+				withResponseCache(params.ip, async () => {
+					try {
+						const report = await lookupIp(params.ip);
+						return Response.json(report, { headers: CORS });
+					} catch (err) {
+						if (err instanceof InvalidIpError) {
+							return Response.json(
+								{ error: err.message },
+								{ status: 400, headers: CORS },
+							);
+						}
 						return Response.json(
-							{ error: err.message },
-							{ status: 400, headers: CORS },
+							{ error: err instanceof Error ? err.message : "lookup failed" },
+							{ status: 500, headers: CORS },
 						);
 					}
-					return Response.json(
-						{ error: err instanceof Error ? err.message : "lookup failed" },
-						{ status: 500, headers: CORS },
-					);
-				}
-			},
+				}),
 		},
 	},
 });
