@@ -6,5 +6,12 @@
   "main": "@tanstack/react-start/server-entry",
   "workers_dev": true,
   "observability": { "enabled": true },
-  "routes": [{ "pattern": "howismyip.xyz", "custom_domain": true }]
+  "routes": [{ "pattern": "howismyip.xyz", "custom_domain": true }],
+  "ratelimits": [
+    {
+      "name": "API_RATE_LIMITER",
+      "namespace_id": "1001",
+      "simple": { "limit": 60, "period": 60 }
+    }
+  ]
 }

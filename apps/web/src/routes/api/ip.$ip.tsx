@@ -1,6 +1,7 @@
 import { InvalidIpError, lookupIp } from "@howismyip/core";
 import { createFileRoute } from "@tanstack/react-router";
 import { withResponseCache } from "../../server/api-cache";
+import { rateLimitGuard } from "../../server/rate-limit.server";
 
 const CORS = { "access-control-allow-origin": "*" } as const;
 
@@ -8,8 +9,12 @@ const CORS = { "access-control-allow-origin": "*" } as const;
 export const Route = createFileRoute("/api/ip/$ip")({
 	server: {
 		handlers: {
-			GET: ({ params }) =>
-				withResponseCache(params.ip, async () => {
+			GET: async ({ params }) => {
+				const limited = await rateLimitGuard();
+				if (limited) {
+					return limited;
+				}
+				return withResponseCache(params.ip, async () => {
 					try {
 						const report = await lookupIp(params.ip);
 						return Response.json(report, { headers: CORS });
@@ -25,7 +30,8 @@ export const Route = createFileRoute("/api/ip/$ip")({
 							{ status: 500, headers: CORS },
 						);
 					}
-				}),
+				});
+			},
 		},
 	},
 });
