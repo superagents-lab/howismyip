@@ -2,6 +2,7 @@ import { isPrivateOrReserved, isValidIp, lookupIp } from "@howismyip/core";
 import { createFileRoute } from "@tanstack/react-router";
 import { detectClientIp } from "../../server/client-ip.server";
 import { fetchEgressIp } from "../../server/lookup";
+import { rateLimitGuard } from "../../server/rate-limit.server";
 
 const CORS = { "access-control-allow-origin": "*" } as const;
 
@@ -10,6 +11,10 @@ export const Route = createFileRoute("/api/me")({
 	server: {
 		handlers: {
 			GET: async () => {
+				const limited = await rateLimitGuard();
+				if (limited) {
+					return limited;
+				}
 				const headerIp = await detectClientIp();
 				let ip =
 					headerIp && isValidIp(headerIp) && !isPrivateOrReserved(headerIp)
