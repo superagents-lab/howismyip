@@ -19,6 +19,7 @@ Ask the advisor to plan any of them if wanted.
 | 002  | Harden `/api/me` (validate detected IP, no 500 on spoofed headers) | P1 | S | — | DONE — merged to `main` (`bbfaf19`) |
 | 003  | Short-TTL edge cache on `GET /api/ip/:ip` | P2 | M | — | DONE — merged to `main` (`9e04305`) |
 | 004  | Rate-limit the public IP-lookup API | P2 | M | 002, 003 | DONE — merged to `main` (`6ccb2cf`) |
+| 005  | Drop composite risk score — make `Consensus` factual-only | P1 | M | — | DONE — merged to `main` (`934867f` + cleanup `59706dc`) |
 
 > All four plans reviewed via `/improve execute` and merged into `main` (HEAD `6ab8f2d`).
 > Final integration verification: 28 core tests pass, web typecheck/lint/build all clean.
