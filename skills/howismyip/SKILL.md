@@ -62,12 +62,6 @@ curl https://your-instance.example/api/ip/8.8.8.8
 {
   "ip": "8.8.8.8",
   "consensus": {
-    "risk_score": 0,            // 0-100, worst score across sources
-    "risk_level": "low",        // low | medium | high
-    "is_proxy": false,          // OR across sources: true if ANY flags it
-    "is_vpn": null,             // null = no source had an opinion
-    "is_tor": false,
-    "is_hosting": true,
     "country_name": "United States",
     "asn": "AS15169",
     "isp": "Google LLC",
@@ -80,8 +74,8 @@ curl https://your-instance.example/api/ip/8.8.8.8
 ```
 
 Guidance for answering:
-- Lead with the **consensus** verdict (risk + flags), then cite which sources
-  raised each flag — disagreement between sources is itself signal.
+- There is no composite risk score — report each source's own score/flags and
+  call out where sources disagree. Disagreement between sources is itself signal.
 - `null` flags mean "unknown", not "false". Say so rather than asserting safety.
 - A `source` with `status: "error"` failed (rate limit, network); note reduced
   confidence if many failed. `source_count` tells you how many actually agreed.

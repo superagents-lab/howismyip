@@ -2,81 +2,40 @@ import type { Consensus, IpReport } from "@howismyip/core";
 import { useState } from "react";
 import type { Dictionary } from "../i18n/messages";
 import { useT } from "../i18n/use-t";
-import { countryDisplay, orDash, riskColor } from "../lib/format";
+import { countryDisplay, orDash } from "../lib/format";
 import { RiskMatrix } from "./risk-matrix";
 import { SourceCard } from "./source-card";
 
-const CONSENSUS_FLAGS: Array<[keyof Consensus, string]> = [
-	["is_proxy", "PROXY"],
-	["is_vpn", "VPN"],
-	["is_tor", "TOR"],
-	["is_hosting", "HOSTING"],
-	["is_mobile", "MOBILE"],
-];
+function Summary({ c, t }: { c: Consensus; t: Dictionary }) {
+	const rows = (
+		[
+			[
+				t.report.location,
+				c.country_name || c.city
+					? `${orDash(c.city)} · ${countryDisplay(c.country_name, c.country_code)}`
+					: null,
+			],
+			[t.report.asn, c.asn],
+			[t.report.isp, c.isp],
+			[t.report.org, c.organization],
+			[t.report.rir, c.rir],
+		] as Array<[string, string | null]>
+	).filter(([, v]) => Boolean(v));
 
-function Verdict({ c, t }: { c: Consensus; t: Dictionary }) {
-	const flags = CONSENSUS_FLAGS.filter(([key]) => c[key] === true);
-	const level = c.risk_level ? t.risk[c.risk_level] : orDash(null);
 	return (
 		<div className="space-y-3">
-			<div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-				<span className="text-muted text-xs">{t.report.consensus}</span>
-				<span className={`font-bold text-2xl ${riskColor(c.risk_level)}`}>
-					{c.risk_score === null ? "n/a" : c.risk_score}
-					<span className="text-base"> {t.report.of100}</span>
-				</span>
-				<span className={`text-sm uppercase ${riskColor(c.risk_level)}`}>
-					{level}
-				</span>
-				<span className="text-muted text-xs">
-					{t.report.sourcesAgreed(c.source_count)}
-				</span>
-			</div>
-
-			{flags.length > 0 ? (
-				<div className="flex flex-wrap gap-1.5">
-					{flags.map(([, label]) => (
-						<span
-							key={label}
-							className="border border-danger px-2 py-0.5 text-danger text-xs"
-						>
-							{label}
-						</span>
-					))}
-				</div>
-			) : (
-				<div className="text-phosphor text-xs">{t.report.noFlags}</div>
-			)}
-
 			{c.blocklists.length > 0 && (
 				<div className="text-danger text-xs">
 					{t.report.onBlocklists} {c.blocklists.join(", ")}
 				</div>
 			)}
-
 			<dl className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm sm:grid-cols-4">
-				{(
-					[
-						[
-							t.report.location,
-							c.country_name || c.city
-								? `${orDash(c.city)} · ${countryDisplay(c.country_name, c.country_code)}`
-								: null,
-						],
-						[t.report.asn, c.asn],
-						[t.report.isp, c.isp],
-						[t.report.org, c.organization],
-						[t.report.rir, c.rir],
-						[t.report.type, c.proxy_type],
-					] as Array<[string, string | null]>
-				)
-					.filter(([, v]) => Boolean(v))
-					.map(([label, value]) => (
-						<div key={label}>
-							<dt className="text-muted text-xs">{label}</dt>
-							<dd className="break-words text-fg">{value}</dd>
-						</div>
-					))}
+				{rows.map(([label, value]) => (
+					<div key={label}>
+						<dt className="text-muted text-xs">{label}</dt>
+						<dd className="break-words text-fg">{value}</dd>
+					</div>
+				))}
 			</dl>
 		</div>
 	);
@@ -141,7 +100,7 @@ export function ReportView({ report }: { report: IpReport }) {
 					</div>
 				</div>
 				<div className="px-4 py-3">
-					<Verdict c={report.consensus} t={t} />
+					<Summary c={report.consensus} t={t} />
 				</div>
 			</div>
 

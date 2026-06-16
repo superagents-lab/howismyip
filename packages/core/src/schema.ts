@@ -75,7 +75,9 @@ export interface ProviderResult {
   error: string | null;
 }
 
-/** Merged "best guess" view across all successful providers. */
+/** Merged "best guess" view across all successful providers. Factual fields only —
+ *  no composite score or risk verdict (each source's own scores/flags live in its
+ *  per-source record). */
 export interface Consensus {
   country_code: string | null;
   country_name: string | null;
@@ -84,15 +86,7 @@ export interface Consensus {
   isp: string | null;
   organization: string | null;
   rir: string | null;
-  proxy_type: string | null;
-  risk_score: number | null; // worst (max) score seen
-  risk_level: RiskLevel | null;
-  is_proxy: boolean | null; // true if ANY source says so
-  is_vpn: boolean | null;
-  is_tor: boolean | null;
-  is_hosting: boolean | null;
-  is_mobile: boolean | null;
-  blocklists: string[]; // union across sources
+  blocklists: string[]; // union across sources (factual: which lists the IP is on)
   /** How many providers contributed a non-empty record. */
   source_count: number;
 }
