@@ -7,7 +7,6 @@ const c = {
   dim: code(2),
   bold: code(1),
   green: code(32),
-  amber: code(33),
   red: code(31),
   cyan: code(36),
   gray: code(90),

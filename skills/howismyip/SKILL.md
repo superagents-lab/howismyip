@@ -78,5 +78,5 @@ Guidance for answering:
   call out where sources disagree. Disagreement between sources is itself signal.
 - `null` flags mean "unknown", not "false". Say so rather than asserting safety.
 - A `source` with `status: "error"` failed (rate limit, network); note reduced
-  confidence if many failed. `source_count` tells you how many actually agreed.
+  confidence if many failed. `source_count` tells you how many sources returned data.
 - `blocklists` being non-empty is a strong negative signal worth surfacing.
