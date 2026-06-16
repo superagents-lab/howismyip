@@ -32,7 +32,7 @@ test('rejects invalid IPs', async () => {
   );
 });
 
-test('merges geo via first-available and risk via max', async () => {
+test('merges factual fields; per-source risk is preserved', async () => {
   const report = await lookupIpWith(
     [
       fakeProvider('a', { country_code: 'US', risk_score: 20, is_vpn: false }),
@@ -42,10 +42,10 @@ test('merges geo via first-available and risk via max', async () => {
     {}
   );
   assert.equal(report.consensus.country_code, 'US'); // first source wins
-  assert.equal(report.consensus.risk_score, 80); // worst score
-  assert.equal(report.consensus.risk_level, 'high');
-  assert.equal(report.consensus.is_vpn, true); // any-true OR
   assert.equal(report.consensus.source_count, 2);
+  const b = report.sources.find((s) => s.id === 'b');
+  assert.equal(b?.data?.risk_score, 80); // per-source score is preserved
+  assert.equal(b?.data?.is_vpn, true);
 });
 
 test('records per-source status without failing the whole report', async () => {
@@ -67,7 +67,7 @@ test('records per-source status without failing the whole report', async () => {
   assert.equal(report.consensus.source_count, 1);
 });
 
-test('unions blocklists and ORs flags to false when all say false', async () => {
+test('unions blocklists across sources', async () => {
   const report = await lookupIpWith(
     [
       fakeProvider('x', { blocklists: ['Spamhaus'], is_tor: false }),
@@ -77,6 +77,4 @@ test('unions blocklists and ORs flags to false when all say false', async () => 
     {}
   );
   assert.deepEqual(report.consensus.blocklists.sort(), ['DroneBL', 'Spamhaus']);
-  assert.equal(report.consensus.is_tor, false);
-  assert.equal(report.consensus.is_proxy, null); // nobody asserted
 });

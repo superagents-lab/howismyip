@@ -6,9 +6,7 @@ import {
   type IpIntelligence,
   type IpReport,
   type ProviderResult,
-  type RiskLevel,
   emptyIntelligence,
-  riskLevelFromScore,
 } from './schema.js';
 
 /** Run one provider, timing it and normalizing the outcome into a ProviderResult. */
@@ -58,36 +56,8 @@ function firstAvailable<K extends keyof IpIntelligence>(
   return null;
 }
 
-/** OR across boolean flags: true if any source asserts true, false if any asserts false, else null. */
-function anyFlag(
-  sources: ProviderResult[],
-  key: 'is_proxy' | 'is_vpn' | 'is_tor' | 'is_hosting' | 'is_mobile'
-): boolean | null {
-  let sawFalse = false;
-  for (const source of sources) {
-    const value = source.data?.[key];
-    if (value === true) {
-      return true;
-    }
-    if (value === false) {
-      sawFalse = true;
-    }
-  }
-  return sawFalse ? false : null;
-}
-
 function buildConsensus(sources: ProviderResult[]): Consensus {
   const ok = sources.filter((s) => s.status === 'ok' && s.data);
-
-  const scores = ok
-    .map((s) => s.data?.risk_score)
-    .filter((v): v is number => typeof v === 'number');
-  const maxScore = scores.length > 0 ? Math.max(...scores) : null;
-
-  let riskLevel: RiskLevel | null = riskLevelFromScore(maxScore);
-  if (riskLevel === null) {
-    riskLevel = firstAvailable(ok, 'risk_level') as RiskLevel | null;
-  }
 
   const blocklists = Array.from(
     new Set(ok.flatMap((s) => s.data?.blocklists ?? []))
@@ -101,14 +71,6 @@ function buildConsensus(sources: ProviderResult[]): Consensus {
     isp: firstAvailable(ok, 'isp'),
     organization: firstAvailable(ok, 'organization'),
     rir: firstAvailable(ok, 'rir'),
-    proxy_type: firstAvailable(ok, 'proxy_type'),
-    risk_score: maxScore,
-    risk_level: riskLevel,
-    is_proxy: anyFlag(ok, 'is_proxy'),
-    is_vpn: anyFlag(ok, 'is_vpn'),
-    is_tor: anyFlag(ok, 'is_tor'),
-    is_hosting: anyFlag(ok, 'is_hosting'),
-    is_mobile: anyFlag(ok, 'is_mobile'),
     blocklists,
     source_count: ok.length,
   };

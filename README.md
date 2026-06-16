@@ -59,7 +59,7 @@ cp .env.example apps/web/.env   # fill in any keys you have
 ## Three ways to use it
 
 **1. Web app** — a terminal-styled UI. Search any IP or scan your own; see the
-consensus verdict and a card per source, with a raw-JSON / copy-as-curl toggle.
+factual consensus summary and a card per source, with a raw-JSON / copy-as-curl toggle.
 
 **2. JSON API** — what the CLI and agents call:
 
@@ -99,8 +99,10 @@ skills/howismyip# Claude Code skill (SKILL.md) wrapping the CLI
 Each provider is an adapter that normalizes one upstream API into a shared
 `IpIntelligence` shape. The aggregator runs every enabled provider concurrently
 (`Promise.allSettled`), never failing the whole report on one provider's error,
-and merges results into a consensus (first-available geo/ASN, worst-case risk,
-any-source-true flags, unioned blocklists). Adding a source = one new adapter.
+and merges the factual fields into a consensus (first-available geo/ASN/registry,
+unioned blocklist hits) and leaves every risk score and proxy/VPN judgment
+per-source — agreement and disagreement across sources is shown, never collapsed
+into one number. Adding a source = one new adapter.
 
 The service is **stateless** — every lookup queries live, nothing is persisted.
 `packages/core` has **zero runtime dependencies** and is runtime-agnostic: it
