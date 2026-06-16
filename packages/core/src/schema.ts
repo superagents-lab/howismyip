@@ -91,11 +91,34 @@ export interface Consensus {
   source_count: number;
 }
 
+export type FactKey =
+  | 'country'
+  | 'city'
+  | 'region'
+  | 'asn'
+  | 'isp'
+  | 'organization';
+
+export interface FactValue {
+  value: string;
+  sources: string[];
+}
+
+/** Source-transparent factual fields for the basic identity card.
+ *  Unlike `consensus`, this never picks a winner: disagreements stay visible. */
+export interface FactSummary {
+  key: FactKey;
+  values: FactValue[];
+  source_count: number;
+  conflict: boolean;
+}
+
 /** Final aggregated payload returned by `lookupIp`. */
 export interface IpReport {
   ip: string;
   queried_at: string; // ISO timestamp
   consensus: Consensus;
+  facts: FactSummary[];
   sources: ProviderResult[];
 }
 

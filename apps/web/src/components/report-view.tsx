@@ -1,42 +1,80 @@
-import type { Consensus, IpReport } from "@howismyip/core";
+import type { FactSummary, IpReport } from "@howismyip/core";
 import { useState } from "react";
 import type { Dictionary } from "../i18n/messages";
 import { useT } from "../i18n/use-t";
-import { countryDisplay, orDash } from "../lib/format";
 import { RiskMatrix } from "./risk-matrix";
-import { SourceCard } from "./source-card";
 
-function Summary({ c, t }: { c: Consensus; t: Dictionary }) {
-	const rows = (
-		[
-			[
-				t.report.location,
-				c.country_name || c.city
-					? `${orDash(c.city)} · ${countryDisplay(c.country_name, c.country_code)}`
-					: null,
-			],
-			[t.report.asn, c.asn],
-			[t.report.isp, c.isp],
-			[t.report.org, c.organization],
-			[t.report.rir, c.rir],
-		] as Array<[string, string | null]>
-	).filter(([, v]) => Boolean(v));
+function primaryFactValue(fact: FactSummary) {
+	return [...fact.values].sort(
+		(a, b) => b.sources.length - a.sources.length,
+	)[0];
+}
+
+function BasicFacts({ facts, t }: { facts: FactSummary[]; t: Dictionary }) {
+	const [expandedFact, setExpandedFact] = useState<string | null>(null);
+	const sourceCount = new Set(
+		facts.flatMap((fact) => fact.values.flatMap((value) => value.sources)),
+	).size;
 
 	return (
 		<div className="space-y-3">
-			{c.blocklists.length > 0 && (
-				<div className="text-danger text-xs">
-					{t.report.onBlocklists} {c.blocklists.join(", ")}
-				</div>
+			<div className="flex items-center justify-between gap-3 border-border border-b pb-2">
+				<h2 className="text-muted text-xs">{t.report.sectionFacts}</h2>
+				<span className="text-muted text-[11px]">
+					{sourceCount} {t.report.sources}
+				</span>
+			</div>
+			{facts.length === 0 && (
+				<p className="text-muted text-xs">{t.report.noFacts}</p>
 			)}
-			<dl className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm sm:grid-cols-4">
-				{rows.map(([label, value]) => (
-					<div key={label}>
-						<dt className="text-muted text-xs">{label}</dt>
-						<dd className="break-words text-fg">{value}</dd>
-					</div>
-				))}
-			</dl>
+			<div className="grid gap-x-6 gap-y-2 sm:grid-cols-2">
+				{facts.map((fact) => {
+					const primary = primaryFactValue(fact);
+					const expanded = expandedFact === fact.key;
+					const toggle = () => setExpandedFact(expanded ? null : fact.key);
+					return (
+						<button
+							type="button"
+							key={fact.key}
+							data-testid={`fact-sources-${fact.key}`}
+							aria-expanded={expanded}
+							onClick={toggle}
+							className={`grid w-full cursor-pointer grid-cols-[6rem_1fr] items-start gap-3 border-border/50 border-b border-l-2 py-2 pl-2 text-left outline-none last:border-b-0 hover:bg-panel-2/60 focus-visible:bg-panel-2 focus-visible:ring-1 focus-visible:ring-phosphor-dim sm:last:border-b ${
+								expanded
+									? "border-l-phosphor-dim bg-panel-2/70"
+									: "border-l-transparent"
+							}`}
+						>
+							<span className="text-muted text-xs">{t.fact[fact.key]}</span>
+							<span className="min-w-0">
+								<div className="break-words text-fg">{primary?.value}</div>
+								<div className="mt-0.5 flex flex-wrap items-center gap-2 text-muted text-[11px]">
+									<span>
+										{primary?.sources.length ?? 0} {t.report.sources}
+									</span>
+									{primary && (
+										<span className="text-phosphor">
+											{expanded ? "▾" : "▸"}
+										</span>
+									)}
+								</div>
+								{expanded && primary && (
+									<div className="mt-2 flex flex-wrap gap-1.5">
+										{primary.sources.map((source) => (
+											<span
+												key={source}
+												className="border border-border px-1.5 py-0.5 text-muted text-[11px]"
+											>
+												{source}
+											</span>
+										))}
+									</div>
+								)}
+							</span>
+						</button>
+					);
+				})}
+			</div>
 		</div>
 	);
 }
@@ -62,12 +100,6 @@ export function ReportView({ report }: { report: IpReport }) {
 
 	const riskSources = report.sources.filter(
 		(s) => s.category === "risk" || s.category === "blocklist",
-	);
-	const networkSources = report.sources.filter(
-		(s) => s.category === "geo" || s.category === "network",
-	);
-	const registrySources = report.sources.filter(
-		(s) => s.category === "registry",
 	);
 
 	return (
@@ -100,7 +132,7 @@ export function ReportView({ report }: { report: IpReport }) {
 					</div>
 				</div>
 				<div className="px-4 py-3">
-					<Summary c={report.consensus} t={t} />
+					<BasicFacts facts={report.facts} t={t} />
 				</div>
 			</div>
 
@@ -111,37 +143,13 @@ export function ReportView({ report }: { report: IpReport }) {
 			)}
 
 			<div className="text-muted text-xs">
-				{t.report.queried(report.sources.length, responded)}
+				{t.report.queried(report.sources.length, responded, riskSources.length)}
 			</div>
 
 			{riskSources.length > 0 && (
 				<section>
 					<h2 className="mb-2 text-muted text-xs">{t.report.sectionRisk}</h2>
 					<RiskMatrix sources={riskSources} />
-				</section>
-			)}
-
-			{networkSources.length > 0 && (
-				<section>
-					<h2 className="mb-2 text-muted text-xs">{t.report.sectionNetwork}</h2>
-					<div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-						{networkSources.map((source) => (
-							<SourceCard key={source.id} source={source} />
-						))}
-					</div>
-				</section>
-			)}
-
-			{registrySources.length > 0 && (
-				<section>
-					<h2 className="mb-2 text-muted text-xs">
-						{t.report.sectionRegistry}
-					</h2>
-					<div className="grid gap-3 sm:grid-cols-2">
-						{registrySources.map((source) => (
-							<SourceCard key={source.id} source={source} />
-						))}
-					</div>
 				</section>
 			)}
 		</div>

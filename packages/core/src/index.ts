@@ -15,6 +15,9 @@ export {
 export type { Env, IpProvider } from './providers/types.js';
 export {
   type Consensus,
+  type FactKey,
+  type FactSummary,
+  type FactValue,
   emptyIntelligence,
   type IpIntelligence,
   type IpReport,

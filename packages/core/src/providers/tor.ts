@@ -40,7 +40,8 @@ async function exitNodes(): Promise<Set<string>> {
 /**
  * Tor exit-node membership — keyless. Checks the IP against the official Tor
  * Project bulk exit list. An exit node is a strong "this is anonymized traffic"
- * signal, so a hit sets is_tor + a maxed risk score.
+ * signal, so a hit sets is_tor + a maxed risk score. A miss is still an
+ * explicit clean result from this binary source, so it scores 0.
  */
 export const torProvider: IpProvider = {
   id: 'tor',
@@ -55,8 +56,8 @@ export const torProvider: IpProvider = {
     return {
       is_tor: isExit,
       proxy_type: isExit ? 'Tor' : null,
-      risk_score: isExit ? 100 : null,
-      risk_level: isExit ? 'high' : null,
+      risk_score: isExit ? 100 : 0,
+      risk_level: isExit ? 'high' : 'low',
       raw: { is_tor_exit: isExit },
     };
   },

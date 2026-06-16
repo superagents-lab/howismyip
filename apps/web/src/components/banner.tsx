@@ -37,16 +37,19 @@ export function Banner() {
 			<Link
 				to="/$lang"
 				params={{ lang: locale }}
-				className="inline-block no-underline hover:no-underline"
+				className="min-w-0 no-underline hover:no-underline"
 			>
-				<pre className="text-phosphor leading-tight text-[13px] sm:text-base">
-					{"┌─[ "}
-					<span className="font-bold">how·is·my·ip</span>
-					{" ]"}
-					{"\n"}
-					{"└─ "}
-					<span className="text-muted">{t.tagline}</span>
-				</pre>
+				<div className="text-phosphor leading-tight text-[13px] sm:text-base">
+					<div>
+						{"┌─[ "}
+						<span className="font-bold">how·is·my·ip</span>
+						{" ]"}
+					</div>
+					<div className="flex min-w-0 gap-1">
+						<span className="shrink-0">└─</span>
+						<span className="min-w-0 text-muted">{t.tagline}</span>
+					</div>
+				</div>
 			</Link>
 			<LangToggle />
 		</header>

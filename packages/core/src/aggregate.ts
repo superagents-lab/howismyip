@@ -3,6 +3,8 @@ import { enabledProviders } from './providers/index.js';
 import type { Env, IpProvider } from './providers/types.js';
 import {
   type Consensus,
+  type FactKey,
+  type FactSummary,
   type IpIntelligence,
   type IpReport,
   type ProviderResult,
@@ -76,6 +78,91 @@ function buildConsensus(sources: ProviderResult[]): Consensus {
   };
 }
 
+const FACT_KEYS: FactKey[] = [
+  'country',
+  'city',
+  'region',
+  'asn',
+  'isp',
+  'organization',
+];
+
+const FACT_VALUE_READERS: Record<
+  FactKey,
+  (data: IpIntelligence) => { group: string; value: string } | null
+> = {
+  country: (data) => {
+    const group = data.country_code ?? data.country_name;
+    if (!group) {
+      return null;
+    }
+    if (data.country_name && data.country_code) {
+      return {
+        group,
+        value: `${data.country_name} (${data.country_code})`,
+      };
+    }
+    return { group, value: group };
+  },
+  city: (data) => (data.city ? { group: data.city, value: data.city } : null),
+  region: (data) =>
+    data.region ? { group: data.region, value: data.region } : null,
+  asn: (data) => (data.asn ? { group: data.asn, value: data.asn } : null),
+  isp: (data) => (data.isp ? { group: data.isp, value: data.isp } : null),
+  organization: (data) =>
+    data.organization
+      ? { group: data.organization, value: data.organization }
+      : null,
+};
+
+function factValue(
+  data: IpIntelligence,
+  key: FactKey
+): { group: string; value: string } | null {
+  return FACT_VALUE_READERS[key](data);
+}
+
+function buildFact(key: FactKey, sources: ProviderResult[]): FactSummary[] {
+  const values = new Map<string, { value: string; sources: Set<string> }>();
+  for (const source of sources) {
+    if (!source.data) {
+      continue;
+    }
+    const reading = factValue(source.data, key);
+    const group = reading?.group.trim();
+    const value = reading?.value.trim();
+    if (!group || !value) {
+      continue;
+    }
+    const entry = values.get(group) ?? { value, sources: new Set<string>() };
+    if (entry.value === group && value !== group) {
+      entry.value = value;
+    }
+    entry.sources.add(source.name);
+    values.set(group, entry);
+  }
+  if (values.size === 0) {
+    return [];
+  }
+  const entries = Array.from(values.values()).map((entry) => ({
+    value: entry.value,
+    sources: Array.from(entry.sources),
+  }));
+  return [
+    {
+      key,
+      values: entries,
+      source_count: entries.reduce((sum, v) => sum + v.sources.length, 0),
+      conflict: entries.length > 1,
+    },
+  ];
+}
+
+function buildFacts(sources: ProviderResult[]): FactSummary[] {
+  const ok = sources.filter((s) => s.status === 'ok' && s.data);
+  return FACT_KEYS.flatMap((key) => buildFact(key, ok));
+}
+
 export class InvalidIpError extends Error {
   constructor(ip: string) {
     super(`Invalid IP address: ${ip}`);
@@ -103,6 +190,7 @@ export async function lookupIpWith(
     ip: trimmed,
     queried_at: new Date().toISOString(),
     consensus: buildConsensus(sources),
+    facts: buildFacts(sources),
     sources,
   };
 }

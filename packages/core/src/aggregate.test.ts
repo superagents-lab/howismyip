@@ -48,6 +48,24 @@ test('merges factual fields; per-source risk is preserved', async () => {
   assert.equal(b?.data?.is_vpn, true);
 });
 
+test('basic facts preserve source disagreements instead of choosing a winner', async () => {
+  const report = await lookupIpWith(
+    [
+      fakeProvider('a', { country_code: 'US', city: 'Ashburn' }),
+      fakeProvider('b', { country_code: 'US', city: 'Mountain View' }),
+      fakeProvider('c', { country_code: 'US', city: 'Ashburn' }),
+    ],
+    '8.8.8.8',
+    {}
+  );
+  const city = report.facts.find((f) => f.key === 'city');
+  assert.equal(city?.conflict, true);
+  assert.deepEqual(city?.values.map((v) => [v.value, v.sources]).sort(), [
+    ['Ashburn', ['a', 'c']],
+    ['Mountain View', ['b']],
+  ]);
+});
+
 test('records per-source status without failing the whole report', async () => {
   const report = await lookupIpWith(
     [

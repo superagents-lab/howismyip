@@ -18,9 +18,9 @@ function blocklistNames(threat: Record<string, unknown>): string[] {
  * network as isp / hosting / business / education. That asn.type is the
  * clearest single signal for the "ISP proxy vs datacenter" question.
  *
- * The free tier exposes the threat booleans + blocklists but no numeric fraud
- * score, so we only set a risk score for IPs flagged as actually malicious
- * (known attacker/abuser/threat); proxy/datacenter status rides on the flags.
+ * The free tier exposes the threat booleans + blocklists but no native numeric
+ * fraud score. Treat the explicit threat block as a binary provider verdict:
+ * malicious flags score 100, explicit clean threat fields score 0.
  */
 export const ipdataProvider: IpProvider = {
   id: 'ipdata',
@@ -37,10 +37,26 @@ export const ipdataProvider: IpProvider = {
     const threat = asDict(payload.threat);
     const carrier = asDict(payload.carrier);
 
+    const knownAttacker = yesNoToBool(threat.is_known_attacker);
+    const knownAbuser = yesNoToBool(threat.is_known_abuser);
+    const knownThreat = yesNoToBool(threat.is_threat);
     const malicious =
-      yesNoToBool(threat.is_known_attacker) === true ||
-      yesNoToBool(threat.is_known_abuser) === true ||
-      yesNoToBool(threat.is_threat) === true;
+      knownAttacker === true || knownAbuser === true || knownThreat === true;
+    const hasThreatVerdict =
+      knownAttacker !== null || knownAbuser !== null || knownThreat !== null;
+    let riskScore: number | null = null;
+    if (malicious) {
+      riskScore = 100;
+    } else if (hasThreatVerdict) {
+      riskScore = 0;
+    }
+
+    let riskLevel: 'low' | 'high' | null = null;
+    if (riskScore === 100) {
+      riskLevel = 'high';
+    } else if (riskScore === 0) {
+      riskLevel = 'low';
+    }
 
     return {
       country_code: toStr(payload.country_code),
@@ -54,8 +70,8 @@ export const ipdataProvider: IpProvider = {
       isp: toStr(asn.name),
       organization: toStr(asn.name),
       proxy_type: toStr(asn.type),
-      risk_score: malicious ? 100 : null,
-      risk_level: malicious ? 'high' : null,
+      risk_score: riskScore,
+      risk_level: riskLevel,
       is_proxy: yesNoToBool(threat.is_proxy),
       is_tor: yesNoToBool(threat.is_tor),
       is_hosting: yesNoToBool(threat.is_datacenter),
