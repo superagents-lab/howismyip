@@ -12,6 +12,11 @@ export {
   KEYED_PROVIDERS,
   KEYLESS_PROVIDERS,
 } from './providers/index.js';
+export {
+  isProviderEnabled,
+  providerEnabledEnvName,
+  providerTimeoutMs,
+} from './providers/config.js';
 export type { Env, IpProvider } from './providers/types.js';
 export {
   type Consensus,

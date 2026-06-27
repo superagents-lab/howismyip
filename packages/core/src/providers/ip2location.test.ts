@@ -11,6 +11,10 @@ afterEach(() => {
   globalThis.fetch = realFetch;
 });
 
+function testContext() {
+  return { signal: new AbortController().signal, timeoutMs: 10_000 };
+}
+
 test('ip2location: API-like payload maps security fields', () => {
   const result = parseIp2LocationPayload('176.46.140.69', {
     ip: '176.46.140.69',
@@ -148,7 +152,7 @@ test('ip2location: provider fetches the public lookup page', async () => {
     );
   }) as typeof fetch;
 
-  const result = await ip2locationProvider.lookup('1.2.3.4', {});
+  const result = await ip2locationProvider.lookup('1.2.3.4', {}, testContext());
   assert.ok(result);
   assert.equal(result.risk_score, 0);
   assert.equal(result.risk_level, 'low');

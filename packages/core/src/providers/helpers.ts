@@ -76,12 +76,15 @@ export async function fetchJson(
   init: RequestInit = {},
   timeoutMs = DEFAULT_TIMEOUT_MS
 ): Promise<unknown> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const controller = init.signal ? null : new AbortController();
+  const signal = init.signal ?? controller?.signal;
+  const timer = controller
+    ? setTimeout(() => controller.abort(), timeoutMs)
+    : null;
   try {
     const response = await fetch(url, {
       ...init,
-      signal: controller.signal,
+      signal,
       headers: {
         accept: 'application/json',
         'user-agent': USER_AGENT,
@@ -93,7 +96,9 @@ export async function fetchJson(
     }
     return await response.json();
   } finally {
-    clearTimeout(timer);
+    if (timer) {
+      clearTimeout(timer);
+    }
   }
 }
 
@@ -115,15 +120,21 @@ const TXT_ESCAPED_QUOTE_RE = /\\"/g;
 export async function dohResolve(
   name: string,
   type: 'A' | 'TXT',
-  timeoutMs = 5000
+  options: { signal?: AbortSignal; timeoutMs?: number } = {}
 ): Promise<string[]> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const controller = options.signal ? null : new AbortController();
+  const signal = options.signal ?? controller?.signal;
+  const timer = controller
+    ? setTimeout(
+        () => controller.abort(),
+        options.timeoutMs ?? DEFAULT_TIMEOUT_MS
+      )
+    : null;
   try {
     const res = await fetch(
       `https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(name)}&type=${type}`,
       {
-        signal: controller.signal,
+        signal,
         headers: { accept: 'application/dns-json', 'user-agent': USER_AGENT },
       }
     );
@@ -142,6 +153,8 @@ export async function dohResolve(
   } catch {
     return [];
   } finally {
-    clearTimeout(timer);
+    if (timer) {
+      clearTimeout(timer);
+    }
   }
 }

@@ -21,8 +21,8 @@ function originQuery(ip: string): string | null {
   return null;
 }
 
-async function txt(name: string): Promise<string | null> {
-  const records = await dohResolve(name, 'TXT');
+async function txt(name: string, signal: AbortSignal): Promise<string | null> {
+  const records = await dohResolve(name, 'TXT', { signal });
   const first = records[0];
   return first && first.length > 0 ? first : null;
 }
@@ -41,13 +41,12 @@ export const cymruProvider: IpProvider = {
   requiresKey: false,
   sourceUrl: (ip) =>
     `https://asn.cymru.com/cgi-bin/whois.cgi?action=do_whois&family=ipv4&bulk_paste=${encodeURIComponent(ip)}`,
-  isEnabled: () => true,
-  async lookup(ip) {
+  async lookup(ip, _env, context) {
     const query = originQuery(ip);
     if (!query) {
       return null;
     }
-    const originRaw = await txt(query);
+    const originRaw = await txt(query, context.signal);
     if (!originRaw) {
       return null;
     }
@@ -58,7 +57,7 @@ export const cymruProvider: IpProvider = {
 
     let asName: string | null = null;
     if (asn) {
-      const asnRaw = await txt(`AS${asn}.asn.cymru.com`);
+      const asnRaw = await txt(`AS${asn}.asn.cymru.com`, context.signal);
       if (asnRaw) {
         const parts = asnRaw.split('|').map((p) => p.trim());
         asName = toStr(parts[4]) ?? null;

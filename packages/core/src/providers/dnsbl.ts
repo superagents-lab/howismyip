@@ -18,8 +18,8 @@ const ZONES: Record<string, string> = {
  * Spamhaus and others use heavily. Treating those as "listed" produces false
  * positives, so we filter them out. NXDOMAIN → [] → not listed.
  */
-async function isListed(query: string): Promise<boolean> {
-  const answers = await dohResolve(query, 'A');
+async function isListed(query: string, signal: AbortSignal): Promise<boolean> {
+  const answers = await dohResolve(query, 'A', { signal });
   return answers.some(
     (a) => a.startsWith('127.') && !a.startsWith('127.255.255.')
   );
@@ -37,8 +37,7 @@ export const dnsblProvider: IpProvider = {
   requiresKey: false,
   sourceUrl: (ip) =>
     `https://multirbl.valli.org/lookup/${encodeURIComponent(ip)}.html`,
-  isEnabled: () => true,
-  async lookup(ip) {
+  async lookup(ip, _env, context) {
     if (detectIpVersion(ip) !== 4) {
       return null; // these lists are IPv4-only
     }
@@ -46,7 +45,7 @@ export const dnsblProvider: IpProvider = {
     const checks = await Promise.all(
       Object.entries(ZONES).map(async ([label, zone]) => ({
         label,
-        listed: await isListed(`${reversed}.${zone}`),
+        listed: await isListed(`${reversed}.${zone}`, context.signal),
       }))
     );
     const blocklists = checks.filter((c) => c.listed).map((c) => c.label);

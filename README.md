@@ -55,10 +55,22 @@ Notes:
   and organization with source counts and expandable source lists. It is not a
   risk score.
 - IP2Location is keyless here because it scrapes the public lookup page rather
-  than calling the paid API. Set `IP2LOCATION_HTML_LOOKUP_DISABLED=1` to disable
-  it in environments where scraping is undesirable.
+  than calling the paid API.
 - The optional `MaxMind minFraud` provider uses MaxMind's official API and is
   treated as a risk source only when credentials are configured.
+
+Provider runtime is configured uniformly:
+
+- Every provider has a switch named
+  `HOWISMYIP_PROVIDER_<PROVIDER_ID>_ENABLED`. Empty means enabled; set it to
+  `0`, `false`, `no`, or `off` to disable that provider. Provider ids are
+  uppercased and non-alphanumeric characters become `_`, e.g.
+  `ip-api` -> `HOWISMYIP_PROVIDER_IP_API_ENABLED`.
+- Keyless providers load when their switch is enabled.
+- Keyed providers load only when their switch is enabled **and** all required
+  credentials are present.
+- `HOWISMYIP_PROVIDER_TIMEOUT_MS` sets the shared per-provider timeout. The
+  default is `10000`.
 
 ## Quick start
 

@@ -13,13 +13,14 @@ export const abuseipdbProvider: IpProvider = {
   name: 'AbuseIPDB',
   category: 'risk',
   requiresKey: true,
+  credentialEnv: ['ABUSEIPDB_API_KEY'],
   sourceUrl: (ip) =>
     `https://www.abuseipdb.com/check/${encodeURIComponent(ip)}`,
-  isEnabled: (env) => Boolean(env.ABUSEIPDB_API_KEY),
-  async lookup(ip, env) {
+  async lookup(ip, env, context) {
     const url = `https://api.abuseipdb.com/api/v2/check?ipAddress=${encodeURIComponent(ip)}&maxAgeInDays=90`;
     const payload = asDict(
       await fetchJson(url, {
+        signal: context.signal,
         headers: {
           Key: env.ABUSEIPDB_API_KEY ?? '',
           accept: 'application/json',

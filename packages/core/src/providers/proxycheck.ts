@@ -12,12 +12,12 @@ export const proxycheckProvider: IpProvider = {
   name: 'proxycheck.io',
   category: 'risk',
   requiresKey: true,
+  credentialEnv: ['PROXYCHECK_API_KEY'],
   sourceUrl: (ip) => `https://proxycheck.io/v3/${encodeURIComponent(ip)}`,
-  isEnabled: (env) => Boolean(env.PROXYCHECK_API_KEY),
-  async lookup(ip, env) {
+  async lookup(ip, env, context) {
     const key = env.PROXYCHECK_API_KEY ?? '';
     const url = `https://proxycheck.io/v2/${encodeURIComponent(ip)}?vpn=1&asn=1&risk=1&key=${encodeURIComponent(key)}`;
-    const payload = asDict(await fetchJson(url));
+    const payload = asDict(await fetchJson(url, { signal: context.signal }));
     const ipData = asDict(payload[ip]);
     const riskScore = toInt(ipData.risk);
     const proxyType = toStr(ipData.type);

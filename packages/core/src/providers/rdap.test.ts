@@ -7,6 +7,10 @@ afterEach(() => {
   globalThis.fetch = realFetch;
 });
 
+function testContext() {
+  return { signal: new AbortController().signal, timeoutMs: 10_000 };
+}
+
 /** Mock a single JSON response for `fetchJson`. */
 function mockJson(payload: unknown) {
   globalThis.fetch = (() =>
@@ -43,7 +47,7 @@ test('rdap: full fixture walks entities and infers RIR', async () => {
       },
     ],
   });
-  const result = await rdapProvider.lookup('8.8.8.8', {});
+  const result = await rdapProvider.lookup('8.8.8.8', {}, testContext());
   assert.ok(result);
   assert.equal(result.rir, 'ARIN');
   assert.equal(result.network_cidr, '8.8.8.0/24');
@@ -55,7 +59,7 @@ test('rdap: full fixture walks entities and infers RIR', async () => {
 
 test('rdap: neither handle nor startAddress returns null', async () => {
   mockJson({ name: 'GOGL', country: 'US' });
-  const result = await rdapProvider.lookup('8.8.8.8', {});
+  const result = await rdapProvider.lookup('8.8.8.8', {}, testContext());
   assert.equal(result, null);
 });
 
@@ -68,7 +72,7 @@ test('rdap: no abuse entity yields null abuse_contact', async () => {
     cidr0_cidrs: [{ v4prefix: '8.8.8.0', length: 24 }],
     entities: [{ roles: ['registrant'] }],
   });
-  const result = await rdapProvider.lookup('8.8.8.8', {});
+  const result = await rdapProvider.lookup('8.8.8.8', {}, testContext());
   assert.ok(result);
   assert.equal(result.abuse_contact, null);
 });

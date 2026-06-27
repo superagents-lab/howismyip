@@ -7,6 +7,10 @@ afterEach(() => {
   globalThis.fetch = realFetch;
 });
 
+function testContext() {
+  return { signal: new AbortController().signal, timeoutMs: 10_000 };
+}
+
 test('ipapi.is: maps abuse score, type, and risk flags', () => {
   const result = parseIpapiIsResponse({
     ip: '154.51.40.88',
@@ -112,7 +116,7 @@ test('ipapi.is: provider fetches keyless endpoint', async () => {
     );
   }) as typeof fetch;
 
-  const result = await ipapiIsProvider.lookup('1.2.3.4', {});
+  const result = await ipapiIsProvider.lookup('1.2.3.4', {}, testContext());
   assert.ok(result);
   assert.equal(result.risk_score, 1);
   assert.equal(result.risk_level, 'low');

@@ -1,4 +1,5 @@
 import { isValidIp } from './ip.js';
+import { providerTimeoutMs } from './providers/config.js';
 import { enabledProviders } from './providers/index.js';
 import type { Env, IpProvider } from './providers/types.js';
 import {
@@ -15,9 +16,12 @@ import {
 async function runProvider(
   provider: IpProvider,
   ip: string,
-  env: Env
+  env: Env,
+  timeoutMs: number
 ): Promise<ProviderResult> {
   const startedAt = Date.now();
+  const controller = new AbortController();
+  let timer: ReturnType<typeof setTimeout> | null = null;
   const base = {
     id: provider.id,
     name: provider.name,
@@ -26,7 +30,15 @@ async function runProvider(
     sourceUrl: provider.sourceUrl(ip),
   };
   try {
-    const partial = await provider.lookup(ip, env);
+    const partial = await Promise.race([
+      provider.lookup(ip, env, { signal: controller.signal, timeoutMs }),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => {
+          controller.abort();
+          reject(new Error(`Timeout after ${timeoutMs}ms`));
+        }, timeoutMs);
+      }),
+    ]);
     const durationMs = Date.now() - startedAt;
     if (!partial) {
       return { ...base, status: 'empty', durationMs, data: null, error: null };
@@ -41,6 +53,10 @@ async function runProvider(
       data: null,
       error: err instanceof Error ? err.message : String(err),
     };
+  } finally {
+    if (timer) {
+      clearTimeout(timer);
+    }
   }
 }
 
@@ -183,8 +199,9 @@ export async function lookupIpWith(
   if (!isValidIp(trimmed)) {
     throw new InvalidIpError(ip);
   }
+  const timeoutMs = providerTimeoutMs(env);
   const sources = await Promise.all(
-    providers.map((p) => runProvider(p, trimmed, env))
+    providers.map((p) => runProvider(p, trimmed, env, timeoutMs))
   );
   return {
     ip: trimmed,

@@ -7,6 +7,10 @@ afterEach(() => {
   globalThis.fetch = realFetch;
 });
 
+function testContext() {
+  return { signal: new AbortController().signal, timeoutMs: 10_000 };
+}
+
 function mockJson(payload: unknown) {
   globalThis.fetch = (() =>
     Promise.resolve(
@@ -28,9 +32,13 @@ test('ipdata: explicit clean threat verdict scores 0', async () => {
     },
   });
 
-  const result = await ipdataProvider.lookup('1.2.3.4', {
-    IPDATA_API_KEY: 'test',
-  });
+  const result = await ipdataProvider.lookup(
+    '1.2.3.4',
+    {
+      IPDATA_API_KEY: 'test',
+    },
+    testContext()
+  );
   assert.ok(result);
   assert.equal(result.risk_score, 0);
   assert.equal(result.risk_level, 'low');
@@ -47,9 +55,13 @@ test('ipdata: malicious threat verdict scores 100', async () => {
     },
   });
 
-  const result = await ipdataProvider.lookup('1.2.3.4', {
-    IPDATA_API_KEY: 'test',
-  });
+  const result = await ipdataProvider.lookup(
+    '1.2.3.4',
+    {
+      IPDATA_API_KEY: 'test',
+    },
+    testContext()
+  );
   assert.ok(result);
   assert.equal(result.risk_score, 100);
   assert.equal(result.risk_level, 'high');

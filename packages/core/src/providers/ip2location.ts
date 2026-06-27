@@ -1,7 +1,7 @@
 import { riskLevelFromScore } from '../schema.js';
 import type { IpIntelligence } from '../schema.js';
 import { asDict, first, toInt, toStr, yesNoToBool } from './helpers.js';
-import type { Env, IpProvider } from './types.js';
+import type { IpProvider } from './types.js';
 
 const IP2LOCATION_BASE_URL = 'https://www.ip2location.io';
 const BROWSER_USER_AGENT =
@@ -212,34 +212,26 @@ export function parseIp2LocationHtml(
   return parsed;
 }
 
-async function fetchIp2LocationHtml(ip: string, env: Env): Promise<string> {
-  const delayMs = toInt(env.IP2LOCATION_HTML_DELAY_MS) ?? 0;
-  if (delayMs > 0) {
-    await new Promise((resolve) => setTimeout(resolve, delayMs));
-  }
-
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 15_000);
-  try {
-    const response = await fetch(
-      `${IP2LOCATION_BASE_URL}/${encodeURIComponent(ip)}`,
-      {
-        signal: controller.signal,
-        headers: {
-          accept:
-            'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-          'accept-language': 'en-US,en;q=0.9',
-          'user-agent': BROWSER_USER_AGENT,
-        },
-      }
-    );
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
+async function fetchIp2LocationHtml(
+  ip: string,
+  signal: AbortSignal
+): Promise<string> {
+  const response = await fetch(
+    `${IP2LOCATION_BASE_URL}/${encodeURIComponent(ip)}`,
+    {
+      signal,
+      headers: {
+        accept:
+          'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+        'accept-language': 'en-US,en;q=0.9',
+        'user-agent': BROWSER_USER_AGENT,
+      },
     }
-    return await response.text();
-  } finally {
-    clearTimeout(timer);
+  );
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
   }
+  return await response.text();
 }
 
 /**
@@ -253,9 +245,8 @@ export const ip2locationProvider: IpProvider = {
   category: 'risk',
   requiresKey: false,
   sourceUrl: (ip) => `${IP2LOCATION_BASE_URL}/${encodeURIComponent(ip)}`,
-  isEnabled: (env) => env.IP2LOCATION_HTML_LOOKUP_DISABLED !== '1',
-  async lookup(ip, env) {
-    const html = await fetchIp2LocationHtml(ip, env);
+  async lookup(ip, _env, context) {
+    const html = await fetchIp2LocationHtml(ip, context.signal);
     return parseIp2LocationHtml(ip, html);
   },
 };

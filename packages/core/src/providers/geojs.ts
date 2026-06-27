@@ -13,11 +13,11 @@ export const geojsProvider: IpProvider = {
   requiresKey: false,
   sourceUrl: (ip) =>
     `https://get.geojs.io/v1/ip/geo/${encodeURIComponent(ip)}.json`,
-  isEnabled: () => true,
-  async lookup(ip) {
+  async lookup(ip, _env, context) {
     const payload = asDict(
       await fetchJson(
-        `https://get.geojs.io/v1/ip/geo/${encodeURIComponent(ip)}.json`
+        `https://get.geojs.io/v1/ip/geo/${encodeURIComponent(ip)}.json`,
+        { signal: context.signal }
       )
     );
     const asn = toInt(payload.asn);

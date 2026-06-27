@@ -7,6 +7,10 @@ afterEach(() => {
   globalThis.fetch = realFetch;
 });
 
+function testContext() {
+  return { signal: new AbortController().signal, timeoutMs: 10_000 };
+}
+
 function mockExitList(body: string) {
   globalThis.fetch = (() =>
     Promise.resolve(new Response(body, { status: 200 }))) as typeof fetch;
@@ -15,7 +19,7 @@ function mockExitList(body: string) {
 test('tor: non-exit membership check scores 0', async () => {
   mockExitList('9.9.9.9\n');
 
-  const result = await torProvider.lookup('1.2.3.4', {});
+  const result = await torProvider.lookup('1.2.3.4', {}, testContext());
   assert.ok(result);
   assert.equal(result.is_tor, false);
   assert.equal(result.risk_score, 0);

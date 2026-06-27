@@ -8,33 +8,27 @@ const TTL_MS = 60 * 60 * 1000; // refresh the public list at most hourly
 // re-downloading a ~kB list on every request. Survives only in-memory.
 let cache: { ips: Set<string>; fetchedAt: number } | null = null;
 
-async function exitNodes(): Promise<Set<string>> {
+async function exitNodes(signal: AbortSignal): Promise<Set<string>> {
   const now = Date.now();
   if (cache && now - cache.fetchedAt < TTL_MS) {
     return cache.ips;
   }
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 10_000);
-  try {
-    const response = await fetch(EXIT_LIST_URL, {
-      signal: controller.signal,
-      headers: { 'user-agent': USER_AGENT },
-    });
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-    const text = await response.text();
-    const ips = new Set(
-      text
-        .split('\n')
-        .map((line) => line.trim())
-        .filter((line) => line.length > 0 && !line.startsWith('#'))
-    );
-    cache = { ips, fetchedAt: now };
-    return ips;
-  } finally {
-    clearTimeout(timer);
+  const response = await fetch(EXIT_LIST_URL, {
+    signal,
+    headers: { 'user-agent': USER_AGENT },
+  });
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
   }
+  const text = await response.text();
+  const ips = new Set(
+    text
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0 && !line.startsWith('#'))
+  );
+  cache = { ips, fetchedAt: now };
+  return ips;
 }
 
 /**
@@ -50,9 +44,8 @@ export const torProvider: IpProvider = {
   requiresKey: false,
   sourceUrl: (ip) =>
     `https://metrics.torproject.org/rs.html#search/${encodeURIComponent(ip)}`,
-  isEnabled: () => true,
-  async lookup(ip) {
-    const isExit = (await exitNodes()).has(ip);
+  async lookup(ip, _env, context) {
+    const isExit = (await exitNodes(context.signal)).has(ip);
     return {
       is_tor: isExit,
       proxy_type: isExit ? 'Tor' : null,

@@ -43,11 +43,11 @@ export const ipApiProvider: IpProvider = {
   category: 'geo',
   requiresKey: false,
   sourceUrl: (ip) => `https://ip-api.com/#${encodeURIComponent(ip)}`,
-  isEnabled: () => true,
-  async lookup(ip) {
+  async lookup(ip, _env, context) {
     const payload = asDict(
       await fetchJson(
-        `http://ip-api.com/json/${encodeURIComponent(ip)}?fields=${FIELDS}`
+        `http://ip-api.com/json/${encodeURIComponent(ip)}?fields=${FIELDS}`,
+        { signal: context.signal }
       )
     );
     if (payload.status !== 'success') {

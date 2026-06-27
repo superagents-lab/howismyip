@@ -102,10 +102,10 @@ export const rdapProvider: IpProvider = {
   category: 'registry',
   requiresKey: false,
   sourceUrl: (ip) => `https://rdap.org/ip/${encodeURIComponent(ip)}`,
-  isEnabled: () => true,
-  async lookup(ip) {
+  async lookup(ip, _env, context) {
     const payload = asDict(
       await fetchJson(`https://rdap.org/ip/${encodeURIComponent(ip)}`, {
+        signal: context.signal,
         headers: { accept: 'application/rdap+json' },
       })
     );

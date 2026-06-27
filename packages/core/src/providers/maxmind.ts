@@ -168,15 +168,15 @@ export const maxmindProvider: IpProvider = {
   name: 'MaxMind minFraud',
   category: 'risk',
   requiresKey: true,
+  credentialEnv: ['MAXMIND_ACCOUNT_ID', 'MAXMIND_LICENSE_KEY'],
   sourceUrl: () => 'https://dev.maxmind.com/minfraud/',
-  isEnabled: (env) =>
-    Boolean(env.MAXMIND_ACCOUNT_ID && env.MAXMIND_LICENSE_KEY),
-  async lookup(ip, env) {
+  async lookup(ip, env, context) {
     const accountId = env.MAXMIND_ACCOUNT_ID ?? '';
     const licenseKey = env.MAXMIND_LICENSE_KEY ?? '';
     const url = env.MAXMIND_MINFRAUD_SCORE_URL ?? DEFAULT_MINFRAUD_SCORE_URL;
     const response = await fetch(url, {
       method: 'POST',
+      signal: context.signal,
       headers: {
         accept: 'application/json',
         authorization: basicAuth(accountId, licenseKey),

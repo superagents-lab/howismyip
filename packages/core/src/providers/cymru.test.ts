@@ -7,6 +7,10 @@ afterEach(() => {
   globalThis.fetch = realFetch;
 });
 
+function testContext() {
+  return { signal: new AbortController().signal, timeoutMs: 10_000 };
+}
+
 /** Mock DoH: maps a query `name` to its TXT-record answers. */
 function mockDoh(answers: Record<string, string[]>) {
   globalThis.fetch = ((input: string | URL | Request) => {
@@ -26,7 +30,7 @@ test('cymru: happy path parses origin and AS-name records', async () => {
     [ORIGIN]: ['15169 | 8.8.8.0/24 | US | arin | 1992-12-01'],
     [AS]: ['15169 | US | arin | 1992-12-01 | GOOGLE, US'],
   });
-  const result = await cymruProvider.lookup('1.2.3.4', {});
+  const result = await cymruProvider.lookup('1.2.3.4', {}, testContext());
   assert.ok(result);
   assert.equal(result.asn, 'AS15169');
   assert.equal(result.network_cidr, '8.8.8.0/24');
@@ -38,7 +42,7 @@ test('cymru: happy path parses origin and AS-name records', async () => {
 
 test('cymru: no origin record returns null', async () => {
   mockDoh({});
-  const result = await cymruProvider.lookup('1.2.3.4', {});
+  const result = await cymruProvider.lookup('1.2.3.4', {}, testContext());
   assert.equal(result, null);
 });
 
@@ -46,7 +50,7 @@ test('cymru: origin present but empty AS-name lookup leaves names null', async (
   mockDoh({
     [ORIGIN]: ['15169 | 8.8.8.0/24 | US | arin | 1992-12-01'],
   });
-  const result = await cymruProvider.lookup('1.2.3.4', {});
+  const result = await cymruProvider.lookup('1.2.3.4', {}, testContext());
   assert.ok(result);
   assert.equal(result.asn, 'AS15169');
   assert.equal(result.organization, null);

@@ -7,6 +7,10 @@ afterEach(() => {
   globalThis.fetch = realFetch;
 });
 
+function testContext() {
+  return { signal: new AbortController().signal, timeoutMs: 10_000 };
+}
+
 test('maxmind: maps minFraud IP risk and Insights traits', () => {
   const result = parseMaxMindMinFraudResponse({
     ip_address: {
@@ -96,10 +100,14 @@ test('maxmind: provider posts minimal minFraud Score request with basic auth', a
     );
   }) as typeof fetch;
 
-  const result = await maxmindProvider.lookup('1.2.3.4', {
-    MAXMIND_ACCOUNT_ID: 'account',
-    MAXMIND_LICENSE_KEY: 'license',
-  });
+  const result = await maxmindProvider.lookup(
+    '1.2.3.4',
+    {
+      MAXMIND_ACCOUNT_ID: 'account',
+      MAXMIND_LICENSE_KEY: 'license',
+    },
+    testContext()
+  );
 
   assert.ok(result);
   assert.equal(result.risk_score, 0.01);

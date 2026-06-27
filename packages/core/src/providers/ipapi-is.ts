@@ -135,10 +135,11 @@ export const ipapiIsProvider: IpProvider = {
   category: 'risk',
   requiresKey: false,
   sourceUrl: (ip) => `https://ipapi.is/?q=${encodeURIComponent(ip)}`,
-  isEnabled: () => true,
-  async lookup(ip) {
+  async lookup(ip, _env, context) {
     const payload = asDict(
-      await fetchJson(`https://api.ipapi.is/?q=${encodeURIComponent(ip)}`)
+      await fetchJson(`https://api.ipapi.is/?q=${encodeURIComponent(ip)}`, {
+        signal: context.signal,
+      })
     );
     return parseIpapiIsResponse(payload);
   },

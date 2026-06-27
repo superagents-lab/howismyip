@@ -15,13 +15,13 @@ export const ipqsProvider: IpProvider = {
   name: 'IPQualityScore',
   category: 'risk',
   requiresKey: true,
+  credentialEnv: ['IPQS_API_KEY'],
   sourceUrl: (ip) =>
     `https://www.ipqualityscore.com/free-ip-lookup-proxy-vpn-test/lookup/${encodeURIComponent(ip)}`,
-  isEnabled: (env) => Boolean(env.IPQS_API_KEY),
-  async lookup(ip, env) {
+  async lookup(ip, env, context) {
     const key = env.IPQS_API_KEY ?? '';
     const url = `https://ipqualityscore.com/api/json/ip/${encodeURIComponent(key)}/${encodeURIComponent(ip)}?strictness=1`;
-    const payload = asDict(await fetchJson(url));
+    const payload = asDict(await fetchJson(url, { signal: context.signal }));
     if (payload.success === false) {
       return null;
     }

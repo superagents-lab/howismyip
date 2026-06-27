@@ -27,12 +27,12 @@ export const ipdataProvider: IpProvider = {
   name: 'ipdata.co',
   category: 'risk',
   requiresKey: true,
+  credentialEnv: ['IPDATA_API_KEY'],
   sourceUrl: (ip) => `https://ipdata.co/?ip=${encodeURIComponent(ip)}`,
-  isEnabled: (env) => Boolean(env.IPDATA_API_KEY),
-  async lookup(ip, env) {
+  async lookup(ip, env, context) {
     const key = env.IPDATA_API_KEY ?? '';
     const url = `https://api.ipdata.co/${encodeURIComponent(ip)}?api-key=${encodeURIComponent(key)}`;
-    const payload = asDict(await fetchJson(url));
+    const payload = asDict(await fetchJson(url, { signal: context.signal }));
     const asn = asDict(payload.asn);
     const threat = asDict(payload.threat);
     const carrier = asDict(payload.carrier);

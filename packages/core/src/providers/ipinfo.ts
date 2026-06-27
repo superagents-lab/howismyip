@@ -10,12 +10,12 @@ export const ipinfoProvider: IpProvider = {
   name: 'IPinfo Lite',
   category: 'network',
   requiresKey: true,
+  credentialEnv: ['IPINFO_TOKEN'],
   sourceUrl: (ip) => `https://ipinfo.io/${encodeURIComponent(ip)}`,
-  isEnabled: (env) => Boolean(env.IPINFO_TOKEN),
-  async lookup(ip, env) {
+  async lookup(ip, env, context) {
     const token = env.IPINFO_TOKEN ?? '';
     const url = `https://api.ipinfo.io/lite/${encodeURIComponent(ip)}?token=${encodeURIComponent(token)}`;
-    const payload = asDict(await fetchJson(url));
+    const payload = asDict(await fetchJson(url, { signal: context.signal }));
     const asName = toStr(payload.as_name);
     return {
       country_code: toStr(payload.country_code),

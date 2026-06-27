@@ -7,6 +7,10 @@ afterEach(() => {
   globalThis.fetch = realFetch;
 });
 
+function testContext() {
+  return { signal: new AbortController().signal, timeoutMs: 10_000 };
+}
+
 /** Mock a single JSON response for `fetchJson`. */
 function mockJson(payload: unknown) {
   globalThis.fetch = (() =>
@@ -26,7 +30,7 @@ test('ip-api: success payload normalizes geo and flags', async () => {
     hosting: true,
     mobile: false,
   });
-  const result = await ipApiProvider.lookup('1.2.3.4', {});
+  const result = await ipApiProvider.lookup('1.2.3.4', {}, testContext());
   assert.ok(result);
   assert.equal(result.country_code, 'US');
   assert.equal(result.asn, 'AS15169');
@@ -41,13 +45,13 @@ test('ip-api: as field with no AS token yields null asn', async () => {
     countryCode: 'US',
     as: '',
   });
-  const result = await ipApiProvider.lookup('1.2.3.4', {});
+  const result = await ipApiProvider.lookup('1.2.3.4', {}, testContext());
   assert.ok(result);
   assert.equal(result.asn, null);
 });
 
 test('ip-api: failure payload returns null', async () => {
   mockJson({ status: 'fail', message: 'private range' });
-  const result = await ipApiProvider.lookup('1.2.3.4', {});
+  const result = await ipApiProvider.lookup('1.2.3.4', {}, testContext());
   assert.equal(result, null);
 });

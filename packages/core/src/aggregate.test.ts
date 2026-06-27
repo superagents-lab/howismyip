@@ -15,7 +15,6 @@ function fakeProvider(
     category: 'risk',
     requiresKey: false,
     sourceUrl: (ip) => `https://example.com/${ip}`,
-    isEnabled: () => true,
     lookup() {
       if (opts.throws) {
         throw new Error('boom');

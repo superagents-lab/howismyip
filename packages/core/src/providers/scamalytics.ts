@@ -20,14 +20,15 @@ export const scamalyticsProvider: IpProvider = {
   name: 'Scamalytics',
   category: 'risk',
   requiresKey: true,
+  credentialEnv: ['SCAMALYTICS_API_URL', 'SCAMALYTICS_API_KEY'],
   sourceUrl: (ip) => `https://scamalytics.com/ip/${encodeURIComponent(ip)}`,
-  isEnabled: (env) =>
-    Boolean(env.SCAMALYTICS_API_URL && env.SCAMALYTICS_API_KEY),
-  async lookup(ip, env) {
+  async lookup(ip, env, context) {
     const url = new URL(env.SCAMALYTICS_API_URL ?? '');
     url.searchParams.set('key', env.SCAMALYTICS_API_KEY ?? '');
     url.searchParams.set('ip', ip);
-    const payload = asDict(await fetchJson(url.toString()));
+    const payload = asDict(
+      await fetchJson(url.toString(), { signal: context.signal })
+    );
 
     const scamalytics = asDict(payload.scamalytics);
     const external = asDict(payload.external_datasources);

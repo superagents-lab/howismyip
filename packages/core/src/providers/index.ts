@@ -1,4 +1,5 @@
 import { abuseipdbProvider } from './abuseipdb.js';
+import { isProviderEnabled } from './config.js';
 import { cymruProvider } from './cymru.js';
 import { dnsblProvider } from './dnsbl.js';
 import { geojsProvider } from './geojs.js';
@@ -15,7 +16,7 @@ import { scamalyticsProvider } from './scamalytics.js';
 import { torProvider } from './tor.js';
 import type { Env, IpProvider } from './types.js';
 
-/** Keyless providers — always run, zero configuration. */
+/** Keyless providers — enabled by default, zero configuration. */
 export const KEYLESS_PROVIDERS: IpProvider[] = [
   ipApiProvider,
   geojsProvider,
@@ -27,7 +28,7 @@ export const KEYLESS_PROVIDERS: IpProvider[] = [
   dnsblProvider,
 ];
 
-/** Optional providers — only run when their credentials are present. */
+/** Keyed providers — enabled by default, but only run when credentials exist. */
 export const KEYED_PROVIDERS: IpProvider[] = [
   proxycheckProvider,
   ipinfoProvider,
@@ -46,7 +47,7 @@ export const ALL_PROVIDERS: IpProvider[] = [
 
 /** Providers that should actually run for the given environment. */
 export function enabledProviders(env: Env): IpProvider[] {
-  return ALL_PROVIDERS.filter((p) => p.isEnabled(env));
+  return ALL_PROVIDERS.filter((p) => isProviderEnabled(p, env));
 }
 
 export type { Env, IpProvider } from './types.js';
