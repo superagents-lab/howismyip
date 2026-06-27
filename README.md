@@ -57,11 +57,8 @@ Notes:
 - IP2Location is keyless here because it scrapes the public lookup page rather
   than calling the paid API. Set `IP2LOCATION_HTML_LOOKUP_DISABLED=1` to disable
   it in environments where scraping is undesirable.
-- The IPQuality reference script labels one basic-info source as `MaxMind`, but
-  that path calls `ipinfo.check.place` and returns MaxMind-shaped GeoIP facts.
-  This project does not depend on that relay. The optional `MaxMind minFraud`
-  provider uses MaxMind's official API and is treated as a risk source only when
-  credentials are configured.
+- The optional `MaxMind minFraud` provider uses MaxMind's official API and is
+  treated as a risk source only when credentials are configured.
 
 ## Quick start
 
