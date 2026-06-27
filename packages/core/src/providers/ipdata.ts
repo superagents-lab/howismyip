@@ -57,6 +57,12 @@ export const ipdataProvider: IpProvider = {
     } else if (riskScore === 0) {
       riskLevel = 'low';
     }
+    let isAbuser: boolean | null = null;
+    if (malicious) {
+      isAbuser = true;
+    } else if (hasThreatVerdict) {
+      isAbuser = false;
+    }
 
     return {
       country_code: toStr(payload.country_code),
@@ -70,12 +76,16 @@ export const ipdataProvider: IpProvider = {
       isp: toStr(asn.name),
       organization: toStr(asn.name),
       proxy_type: toStr(asn.type),
+      usage_type: toStr(asn.type),
+      company_type: toStr(asn.type),
+      connection_type: toStr(asn.type),
       risk_score: riskScore,
       risk_level: riskLevel,
       is_proxy: yesNoToBool(threat.is_proxy),
       is_tor: yesNoToBool(threat.is_tor),
       is_hosting: yesNoToBool(threat.is_datacenter),
       is_mobile: carrier.name ? true : null,
+      is_abuser: isAbuser,
       blocklists: blocklistNames(threat),
       raw: payload,
     };

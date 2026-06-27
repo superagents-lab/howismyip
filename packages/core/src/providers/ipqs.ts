@@ -40,6 +40,7 @@ export const ipqsProvider: IpProvider = {
       isp: toStr(payload.ISP),
       organization: toStr(payload.organization),
       proxy_type: connectionType,
+      connection_type: connectionType,
       risk_score: score,
       risk_level: riskLevelFromScore(score),
       is_proxy: yesNoToBool(payload.proxy),
@@ -49,6 +50,8 @@ export const ipqsProvider: IpProvider = {
       is_mobile:
         yesNoToBool(payload.mobile) ??
         (connectionType === 'Mobile' ? true : null),
+      is_abuser: yesNoToBool(payload.recent_abuse),
+      is_crawler: yesNoToBool(payload.bot_status),
       raw: payload,
     };
   },

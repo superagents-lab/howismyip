@@ -36,9 +36,11 @@ export const abuseipdbProvider: IpProvider = {
       isp: toStr(data.isp),
       as_domain: toStr(data.domain),
       proxy_type: usageType,
+      usage_type: usageType,
       risk_score: score,
       risk_level: riskLevelFromScore(score),
       is_hosting: isHosting,
+      is_abuser: totalReports > 0 ? true : null,
       blocklists:
         totalReports > 0 ? [`AbuseIPDB (${totalReports} reports)`] : [],
       raw: payload,

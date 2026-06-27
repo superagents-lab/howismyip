@@ -66,6 +66,7 @@ export const ipApiProvider: IpProvider = {
       isp: toStr(payload.isp),
       organization: toStr(payload.org) ?? toStr(payload.asname),
       proxy_type: hosting ? 'Hosting' : null,
+      usage_type: hosting ? 'hosting' : null,
       is_proxy: proxy,
       is_hosting: hosting,
       is_mobile: yesNoToBool(payload.mobile),

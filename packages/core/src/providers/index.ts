@@ -3,9 +3,12 @@ import { cymruProvider } from './cymru.js';
 import { dnsblProvider } from './dnsbl.js';
 import { geojsProvider } from './geojs.js';
 import { ipApiProvider } from './ip-api.js';
+import { ip2locationProvider } from './ip2location.js';
+import { ipapiIsProvider } from './ipapi-is.js';
 import { ipdataProvider } from './ipdata.js';
 import { ipinfoProvider } from './ipinfo.js';
 import { ipqsProvider } from './ipqs.js';
+import { maxmindProvider } from './maxmind.js';
 import { proxycheckProvider } from './proxycheck.js';
 import { rdapProvider } from './rdap.js';
 import { scamalyticsProvider } from './scamalytics.js';
@@ -18,6 +21,8 @@ export const KEYLESS_PROVIDERS: IpProvider[] = [
   geojsProvider,
   rdapProvider,
   cymruProvider,
+  ip2locationProvider,
+  ipapiIsProvider,
   torProvider,
   dnsblProvider,
 ];
@@ -30,6 +35,7 @@ export const KEYED_PROVIDERS: IpProvider[] = [
   abuseipdbProvider,
   ipqsProvider,
   ipdataProvider,
+  maxmindProvider,
 ];
 
 /** Every known provider, keyless first. */

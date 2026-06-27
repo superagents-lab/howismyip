@@ -30,6 +30,7 @@ export const proxycheckProvider: IpProvider = {
       isp: toStr(ipData.provider),
       organization: toStr(ipData.organisation) ?? toStr(ipData.organization),
       proxy_type: proxyType,
+      connection_type: proxyType,
       risk_score: riskScore,
       risk_level: riskLevelFromScore(riskScore),
       is_proxy: yesNoToBool(ipData.proxy),

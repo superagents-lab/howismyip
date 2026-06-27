@@ -38,6 +38,9 @@ export interface IpIntelligence {
 
   // risk / classification
   proxy_type: string | null;
+  usage_type: string | null;
+  company_type: string | null;
+  connection_type: string | null;
   risk_score: number | null; // 0-100, higher = riskier
   risk_level: RiskLevel | null;
   is_proxy: boolean | null;
@@ -45,6 +48,10 @@ export interface IpIntelligence {
   is_tor: boolean | null;
   is_hosting: boolean | null;
   is_mobile: boolean | null;
+  is_abuser: boolean | null;
+  is_crawler: boolean | null;
+  is_anycast: boolean | null;
+  is_relay: boolean | null;
 
   // registry (RDAP / Team Cymru)
   rir: string | null; // ARIN / RIPE / APNIC / LACNIC / AFRINIC
@@ -54,6 +61,7 @@ export interface IpIntelligence {
 
   // blocklist
   blocklists: string[]; // names of lists the IP was found on (empty = clean)
+  risk_reasons: string[]; // provider-specific reason codes / labels
 
   // provenance
   // Opaque upstream JSON. Typed `any` (not `unknown`) so TanStack Start's
@@ -137,6 +145,9 @@ export function emptyIntelligence(ip: string): IpIntelligence {
     isp: null,
     organization: null,
     proxy_type: null,
+    usage_type: null,
+    company_type: null,
+    connection_type: null,
     risk_score: null,
     risk_level: null,
     is_proxy: null,
@@ -144,11 +155,16 @@ export function emptyIntelligence(ip: string): IpIntelligence {
     is_tor: null,
     is_hosting: null,
     is_mobile: null,
+    is_abuser: null,
+    is_crawler: null,
+    is_anycast: null,
+    is_relay: null,
     rir: null,
     network_cidr: null,
     allocation_date: null,
     abuse_contact: null,
     blocklists: [],
+    risk_reasons: [],
     raw: null,
   };
 }

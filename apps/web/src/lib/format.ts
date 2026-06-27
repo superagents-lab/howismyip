@@ -62,6 +62,14 @@ export function orDash(value: string | number | null | undefined): string {
 	return String(value);
 }
 
+export function formatRiskScore(score: number | null): string {
+	if (score === null || !Number.isFinite(score)) {
+		return "—";
+	}
+	const rounded = Math.round(score * 10) / 10;
+	return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+}
+
 export function formatTimestamp(iso: string): string {
 	return new Date(iso).toLocaleString();
 }

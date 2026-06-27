@@ -2,7 +2,13 @@ import type { IpIntelligence, ProviderResult } from "@howismyip/core";
 import { useState } from "react";
 import type { Dictionary } from "../i18n/messages";
 import { useT } from "../i18n/use-t";
-import { countryDisplay, orDash, riskBarColor, riskColor } from "../lib/format";
+import {
+	countryDisplay,
+	formatRiskScore,
+	orDash,
+	riskBarColor,
+	riskColor,
+} from "../lib/format";
 
 type Tone = "good" | "warn" | "bad" | "muted";
 
@@ -18,11 +24,18 @@ const FLAG_KEYS: Array<[keyof IpIntelligence, keyof Dictionary["signal"]]> = [
 	["is_vpn", "vpn"],
 	["is_tor", "tor"],
 	["is_hosting", "hosting"],
+	["is_abuser", "abuser"],
+	["is_crawler", "crawler"],
 ];
 
 const DETAIL_FLAG_KEYS: Array<
 	[keyof IpIntelligence, keyof Dictionary["signal"]]
-> = [...FLAG_KEYS, ["is_mobile", "mobile"]];
+> = [
+	...FLAG_KEYS,
+	["is_mobile", "mobile"],
+	["is_anycast", "anycast"],
+	["is_relay", "relay"],
+];
 
 /** One-line verdict per source, with a tone for coloring. */
 function verdict(
@@ -49,6 +62,12 @@ function verdict(
 	const level = d.risk_level ? t.risk[d.risk_level] : null;
 	const parts = [level, d.proxy_type].filter(Boolean) as string[];
 	if (parts.length === 0) {
+		const type = d.usage_type ?? d.company_type ?? d.connection_type;
+		if (type) {
+			parts.push(type);
+		}
+	}
+	if (parts.length === 0) {
 		return { text: `✓ ${t.card.clean}`, tone: "good" };
 	}
 	const tone: Tone =
@@ -70,11 +89,12 @@ function ScoreBar({
 	if (score === null) {
 		return <div className="h-1.5 w-full bg-border/40" />;
 	}
+	const width = Math.max(0, Math.min(100, score));
 	return (
 		<div className="h-1.5 w-full bg-border/40">
 			<div
 				className={`h-full ${riskBarColor(level)}`}
-				style={{ width: `${score}%` }}
+				style={{ width: `${width}%` }}
 			/>
 		</div>
 	);
@@ -124,7 +144,7 @@ function ScoreMeter({
 			<span
 				className={`text-right font-bold text-sm ${score === null ? "text-muted" : riskColor(level)}`}
 			>
-				{score === null ? "·" : score}
+				{score === null ? "·" : formatRiskScore(score)}
 			</span>
 			<ScoreBar score={score} level={level} />
 		</div>
@@ -147,6 +167,9 @@ function fieldsFor(d: IpIntelligence, t: Dictionary): Array<[string, string]> {
 		[f.org, d.organization],
 		[f.asDomain, d.as_domain],
 		[f.proxyType, d.proxy_type],
+		[f.usageType, d.usage_type],
+		[f.companyType, d.company_type],
+		[f.connectionType, d.connection_type],
 		[f.rir, d.rir],
 		[f.network, d.network_cidr],
 		[f.allocated, d.allocation_date],
@@ -179,7 +202,9 @@ function DetailPanel({ source }: { source: ProviderResult }) {
 							<div className="mb-2 flex items-center justify-between gap-2">
 								<span className="text-muted text-xs">{t.card.risk}</span>
 								<span className={`font-bold ${riskColor(d.risk_level)}`}>
-									{d.risk_score === null ? t.report.noScore : d.risk_score}
+									{d.risk_score === null
+										? t.report.noScore
+										: formatRiskScore(d.risk_score)}
 									{d.risk_level ? ` · ${t.risk[d.risk_level]}` : ""}
 								</span>
 							</div>
@@ -237,6 +262,11 @@ function DetailPanel({ source }: { source: ProviderResult }) {
 								{t.card.listed} {d.blocklists.join(", ")}
 							</div>
 						)}
+						{d.risk_reasons.length > 0 && (
+							<div className="text-amber text-xs">
+								{t.fields.riskReasons}: {d.risk_reasons.join(", ")}
+							</div>
+						)}
 					</div>
 
 					<div className="p-3">
@@ -271,7 +301,7 @@ export function RiskMatrix({ sources }: { sources: ProviderResult[] }) {
 
 	return (
 		<div className="border border-border bg-panel">
-			<div className="hidden grid-cols-[1.25rem_9rem_minmax(11rem,0.9fr)_minmax(12rem,1fr)_minmax(12rem,1.2fr)] items-center border-border border-b bg-panel-2 text-center text-[11px] text-muted uppercase tracking-wider md:grid">
+			<div className="hidden grid-cols-[1.25rem_9rem_minmax(11rem,0.85fr)_minmax(15rem,1.2fr)_minmax(11rem,1fr)] items-center border-border border-b bg-panel-2 text-center text-[11px] text-muted uppercase tracking-wider md:grid">
 				<span className="px-2 py-2" />
 				<span className="border-border/55 border-l px-3 py-2">
 					{t.report.colSource}
@@ -302,7 +332,7 @@ export function RiskMatrix({ sources }: { sources: ProviderResult[] }) {
 							data-testid={`risk-toggle-${source.id}`}
 							aria-expanded={expanded}
 							onClick={toggle}
-							className={`grid w-full cursor-pointer grid-cols-[1.25rem_1fr] gap-x-2 gap-y-2 border-l-2 py-3 text-left outline-none hover:bg-panel-2/60 focus-visible:bg-panel-2 focus-visible:ring-1 focus-visible:ring-phosphor-dim md:grid-cols-[1.25rem_9rem_minmax(11rem,0.9fr)_minmax(12rem,1fr)_minmax(12rem,1.2fr)] md:items-center md:gap-0 md:py-0 ${
+							className={`grid w-full cursor-pointer grid-cols-[1.25rem_1fr] gap-x-2 gap-y-2 border-l-2 py-3 text-left outline-none hover:bg-panel-2/60 focus-visible:bg-panel-2 focus-visible:ring-1 focus-visible:ring-phosphor-dim md:grid-cols-[1.25rem_9rem_minmax(11rem,0.85fr)_minmax(15rem,1.2fr)_minmax(11rem,1fr)] md:items-center md:gap-0 md:py-0 ${
 								expanded
 									? "border-l-phosphor-dim bg-panel-2"
 									: "border-l-transparent"
