@@ -24,6 +24,7 @@ const en = {
 		searching: "searching…",
 		scan: "scan my IP ▶",
 		scanning: "scanning…",
+		loadingDetail: "multi-source lookup in progress",
 		hint: "enter any IPv4 / IPv6 address, or scan the address you're connecting from.",
 		notePrivate: (ip: string) =>
 			`detected ${ip} — a private/LAN address (expected in local dev).`,
@@ -149,6 +150,7 @@ const zh: Dictionary = {
 		searching: "查询中…",
 		scan: "查我的 IP ▶",
 		scanning: "查询中…",
+		loadingDetail: "多源查询进行中",
 		hint: "输入任意 IPv4 / IPv6 地址，或扫描你当前连接所用的地址。",
 		notePrivate: (ip: string) =>
 			`检测到 ${ip} —— 私有/局域网地址（本地开发时正常）。`,

@@ -2,9 +2,9 @@
 name: howismyip
 description: >-
   Check an IP address's reputation, quality, and risk by aggregating many data
-  sources at once — is it a proxy / VPN / Tor exit / hosting/datacenter IP, what
-  is its ASN, ISP, geolocation, and owning registry (RIR), and is it on any DNS
-  blocklists. Use whenever the user asks about an IP's reputation or risk/fraud
+  sources at once — is it a proxy / VPN / Tor / hosting/datacenter IP, what is
+  its ASN, ISP, geolocation, and owning registry (RIR). Use whenever the user
+  asks about an IP's reputation or risk/fraud
   score, whether an IP is a proxy/VPN/Tor, IP geolocation, ASN/ISP lookup, who
   owns an IP range, or wants to vet a suspicious address. Also triggers on a
   bare IPv4/IPv6 address when the intent is to investigate it. Works keyless out
@@ -15,17 +15,16 @@ description: >-
 
 Aggregate IP intelligence from many independent sources into one normalized
 report. Six sources run with **no API key**: ip-api.com (geo + proxy/hosting
-flags), ipwho.is (geo + ASN), RDAP (registry allocation + abuse contact),
-Team Cymru (BGP/ASN), the Tor exit list, and DNS blocklists. Paid sources
-(proxycheck, IPinfo, Scamalytics, AbuseIPDB, IPQualityScore) join automatically
-when keys are configured.
+flags), GeoJS (geo + ASN), RDAP (registry allocation + abuse contact), Team
+Cymru (BGP/ASN), IP2Location, and ipapi.is. Paid sources (proxycheck, IPinfo,
+Scamalytics, AbuseIPDB, IPQualityScore, ipdata.co, and MaxMind minFraud) join
+automatically when keys are configured.
 
 ## When to use
 
 - "Is `X.X.X.X` a VPN / proxy / Tor / datacenter IP?"
 - "What's the reputation / risk / fraud score of this IP?"
 - "Where is this IP / what ASN / ISP / who owns it?"
-- "Is this IP on any blocklists?"
 - The user pastes a bare IP and wants it investigated.
 
 ## How to run

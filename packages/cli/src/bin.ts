@@ -20,6 +20,8 @@ Environment:
   HOWISMYIP_BASE_URL   Query a deployed instance (e.g. https://howismyip.dev)
                        instead of running keyless sources locally. Unlocks any
                        paid providers configured on that server.
+  Provider API keys    When running locally, export provider keys in your shell,
+                       e.g. PROXYCHECK_API_KEY, IPINFO_TOKEN, IPQS_API_KEY.
 `;
 
 async function fetchJson(url: string): Promise<unknown> {

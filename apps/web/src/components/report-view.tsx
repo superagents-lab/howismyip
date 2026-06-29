@@ -99,7 +99,10 @@ export function ReportView({ report }: { report: IpReport }) {
 	const responded = report.sources.filter((s) => s.status === "ok").length;
 
 	const riskSources = report.sources.filter(
-		(s) => s.category === "risk" || s.category === "blocklist",
+		(s) =>
+			(s.category === "risk" || s.category === "blocklist") &&
+			s.status === "ok" &&
+			s.data,
 	);
 
 	return (

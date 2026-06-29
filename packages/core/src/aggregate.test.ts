@@ -87,11 +87,14 @@ test('records per-source status without failing the whole report', async () => {
 test('unions blocklists across sources', async () => {
   const report = await lookupIpWith(
     [
-      fakeProvider('x', { blocklists: ['Spamhaus'], is_tor: false }),
-      fakeProvider('y', { blocklists: ['DroneBL'], is_tor: false }),
+      fakeProvider('x', { blocklists: ['ThreatFeedA'], is_tor: false }),
+      fakeProvider('y', { blocklists: ['ThreatFeedB'], is_tor: false }),
     ],
     '8.8.8.8',
     {}
   );
-  assert.deepEqual(report.consensus.blocklists.sort(), ['DroneBL', 'Spamhaus']);
+  assert.deepEqual(report.consensus.blocklists.sort(), [
+    'ThreatFeedA',
+    'ThreatFeedB',
+  ]);
 });

@@ -1,7 +1,6 @@
 import { abuseipdbProvider } from './abuseipdb.js';
 import { isProviderEnabled } from './config.js';
 import { cymruProvider } from './cymru.js';
-import { dnsblProvider } from './dnsbl.js';
 import { geojsProvider } from './geojs.js';
 import { ipApiProvider } from './ip-api.js';
 import { ip2locationProvider } from './ip2location.js';
@@ -13,7 +12,6 @@ import { maxmindProvider } from './maxmind.js';
 import { proxycheckProvider } from './proxycheck.js';
 import { rdapProvider } from './rdap.js';
 import { scamalyticsProvider } from './scamalytics.js';
-import { torProvider } from './tor.js';
 import type { Env, IpProvider } from './types.js';
 
 /** Keyless providers — enabled by default, zero configuration. */
@@ -24,8 +22,6 @@ export const KEYLESS_PROVIDERS: IpProvider[] = [
   cymruProvider,
   ip2locationProvider,
   ipapiIsProvider,
-  torProvider,
-  dnsblProvider,
 ];
 
 /** Keyed providers — enabled by default, but only run when credentials exist. */

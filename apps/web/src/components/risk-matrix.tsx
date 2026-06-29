@@ -49,16 +49,6 @@ function verdict(
 		return { text: t.card.noData, tone: "muted" };
 	}
 	const d = s.data;
-	if (s.id === "tor") {
-		return d.is_tor
-			? { text: t.card.torExit, tone: "bad" }
-			: { text: `✓ ${t.card.notTor}`, tone: "good" };
-	}
-	if (s.id === "dnsbl") {
-		return d.blocklists.length > 0
-			? { text: `${t.card.listed} ${d.blocklists.join(", ")}`, tone: "bad" }
-			: { text: `✓ ${t.card.notListed}`, tone: "good" };
-	}
 	const level = d.risk_level ? t.risk[d.risk_level] : null;
 	const parts = [level, d.proxy_type].filter(Boolean) as string[];
 	if (parts.length === 0) {
@@ -185,7 +175,7 @@ function DetailPanel({ source }: { source: ProviderResult }) {
 	const sourceVerdict = verdict(source, t);
 
 	return (
-		<div className="border-border/60 border-t bg-bg/40 text-sm">
+		<div className="risk-detail border-border/60 border-t bg-bg/40 text-sm">
 			{source.status === "error" && (
 				<p className="px-3 py-3 text-danger text-xs">
 					! {orDash(source.error)}
@@ -196,39 +186,56 @@ function DetailPanel({ source }: { source: ProviderResult }) {
 			)}
 
 			{d && (
-				<div className="grid md:grid-cols-[minmax(12rem,0.8fr)_minmax(14rem,1fr)_minmax(18rem,1.25fr)]">
-					<div className="space-y-3 border-border/50 border-b p-3 md:border-r md:border-b-0">
-						<div>
+				<div className="space-y-3 p-3">
+					<div className="grid gap-2 md:grid-cols-4">
+						<div className="border border-border/60 bg-panel/70 p-2">
 							<div className="mb-2 flex items-center justify-between gap-2">
-								<span className="text-muted text-xs">{t.card.risk}</span>
-								<span className={`font-bold ${riskColor(d.risk_level)}`}>
+								<span className="text-muted text-[11px] uppercase">
+									{t.card.risk}
+								</span>
+								<span
+									className={`font-bold text-xs ${riskColor(d.risk_level)}`}
+								>
 									{d.risk_score === null
 										? t.report.noScore
 										: formatRiskScore(d.risk_score)}
-									{d.risk_level ? ` · ${t.risk[d.risk_level]}` : ""}
 								</span>
 							</div>
 							<ScoreBar score={d.risk_score} level={d.risk_level} />
 						</div>
-						<div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
-							<span className="text-muted">{t.card.status}</span>
-							<span className="text-fg">{source.status}</span>
-							<span className="text-muted">{t.card.latency}</span>
-							<span className="text-fg">{source.durationMs}ms</span>
+						<div className="border border-border/60 bg-panel/70 p-2">
+							<div className="text-muted text-[11px] uppercase">
+								{t.report.colVerdict}
+							</div>
+							<div className={`mt-1 text-xs ${TONE_CLASS[sourceVerdict.tone]}`}>
+								{sourceVerdict.text}
+							</div>
 						</div>
-						<a
-							href={source.sourceUrl}
-							target="_blank"
-							rel="noopener noreferrer"
-							className="inline-block text-phosphor text-xs hover:underline"
-						>
-							{t.card.viewAtSource}
-						</a>
+						<div className="border border-border/60 bg-panel/70 p-2">
+							<div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
+								<span className="text-muted">{t.card.status}</span>
+								<span className="text-right text-fg">{source.status}</span>
+								<span className="text-muted">{t.card.latency}</span>
+								<span className="text-right text-fg">
+									{source.durationMs}ms
+								</span>
+							</div>
+						</div>
+						<div className="flex items-center border border-border/60 bg-panel/70 p-2">
+							<a
+								href={source.sourceUrl}
+								target="_blank"
+								rel="noopener noreferrer"
+								className="text-phosphor text-xs hover:underline"
+							>
+								{t.card.viewAtSource}
+							</a>
+						</div>
 					</div>
 
-					<div className="space-y-3 border-border/50 border-b p-3 md:border-r md:border-b-0">
-						<div>
-							<div className="mb-2 text-muted text-xs">
+					<div className="grid gap-3 md:grid-cols-2">
+						<section className="border border-border/60 bg-bg/30 p-3">
+							<div className="mb-2 text-muted text-[11px] uppercase">
 								{t.report.colSignals}
 							</div>
 							<div className="flex flex-wrap gap-1.5">
@@ -248,31 +255,31 @@ function DetailPanel({ source }: { source: ProviderResult }) {
 									);
 								})}
 							</div>
-						</div>
-						<div>
-							<div className="mb-1 text-muted text-xs">
-								{t.report.colVerdict}
+						</section>
+						<section className="space-y-2 border border-border/60 bg-bg/30 p-3 text-xs">
+							<div className="text-muted text-[11px] uppercase">
+								{t.fields.riskReasons}
 							</div>
-							<p className={`text-xs ${TONE_CLASS[sourceVerdict.tone]}`}>
-								{sourceVerdict.text}
-							</p>
-						</div>
-						{d.blocklists.length > 0 && (
-							<div className="text-danger text-xs">
-								{t.card.listed} {d.blocklists.join(", ")}
-							</div>
-						)}
-						{d.risk_reasons.length > 0 && (
-							<div className="text-amber text-xs">
-								{t.fields.riskReasons}: {d.risk_reasons.join(", ")}
-							</div>
-						)}
+							{d.blocklists.length > 0 && (
+								<div className="text-danger">
+									{t.card.listed} {d.blocklists.join(", ")}
+								</div>
+							)}
+							{d.risk_reasons.length > 0 && (
+								<div className="text-amber">{d.risk_reasons.join(", ")}</div>
+							)}
+							{d.blocklists.length === 0 && d.risk_reasons.length === 0 && (
+								<div className="text-muted">{t.card.clean}</div>
+							)}
+						</section>
 					</div>
 
-					<div className="p-3">
-						<div className="mb-2 text-muted text-xs">{t.card.evidence}</div>
+					<section className="border border-border/60 bg-bg/30 p-3">
+						<div className="mb-2 text-muted text-[11px] uppercase">
+							{t.card.evidence}
+						</div>
 						{fields.length > 0 ? (
-							<dl className="grid gap-x-4 gap-y-1 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2">
+							<dl className="grid gap-x-4 gap-y-1 sm:grid-cols-2 lg:grid-cols-3">
 								{fields.map(([label, value]) => (
 									<div
 										key={label}
@@ -286,7 +293,7 @@ function DetailPanel({ source }: { source: ProviderResult }) {
 						) : (
 							<p className="text-muted text-xs">{t.card.noData}</p>
 						)}
-					</div>
+					</section>
 				</div>
 			)}
 		</div>
@@ -332,10 +339,10 @@ export function RiskMatrix({ sources }: { sources: ProviderResult[] }) {
 							data-testid={`risk-toggle-${source.id}`}
 							aria-expanded={expanded}
 							onClick={toggle}
-							className={`grid w-full cursor-pointer grid-cols-[1.25rem_1fr] gap-x-2 gap-y-2 border-l-2 py-3 text-left outline-none hover:bg-panel-2/60 focus-visible:bg-panel-2 focus-visible:ring-1 focus-visible:ring-phosphor-dim md:grid-cols-[1.25rem_9rem_minmax(11rem,0.85fr)_minmax(15rem,1.2fr)_minmax(11rem,1fr)] md:items-center md:gap-0 md:py-0 ${
+							className={`grid w-full cursor-pointer grid-cols-[1.25rem_1fr] gap-x-2 gap-y-2 border-l-2 py-3 text-left outline-none hover:bg-panel-2/60 focus-visible:bg-panel-2 focus-visible:ring-1 focus-visible:ring-phosphor-dim md:items-center md:gap-0 md:py-0 ${
 								expanded
-									? "border-l-phosphor-dim bg-panel-2"
-									: "border-l-transparent"
+									? "border-l-phosphor-dim bg-panel-2 md:grid-cols-[1.25rem_1fr]"
+									: "border-l-transparent md:grid-cols-[1.25rem_9rem_minmax(11rem,0.85fr)_minmax(15rem,1.2fr)_minmax(11rem,1fr)]"
 							}`}
 						>
 							<span
@@ -344,23 +351,31 @@ export function RiskMatrix({ sources }: { sources: ProviderResult[] }) {
 							>
 								{expanded ? "▾" : "▸"}
 							</span>
-							<div className="min-w-0 pr-3 md:w-full md:border-border/55 md:border-l md:px-3 md:py-3">
+							<div
+								className={`min-w-0 pr-3 md:w-full md:border-border/55 md:border-l md:px-3 md:py-3 ${
+									expanded ? "md:border-r" : ""
+								}`}
+							>
 								<span className="truncate font-bold text-fg text-xs">
 									{source.name}
 								</span>
 							</div>
-							<div className="col-start-2 min-w-0 pr-3 md:col-start-auto md:flex md:w-full md:justify-center md:border-border/55 md:border-l md:px-3 md:py-3">
-								<ScoreMeter score={score} level={d?.risk_level ?? null} />
-							</div>
-							<div className="col-start-2 pr-3 md:col-start-auto md:flex md:w-full md:justify-center md:border-border/55 md:border-l md:px-3 md:py-3">
-								<SignalChips data={d} t={t} className="md:justify-center" />
-							</div>
-							<span
-								className={`col-start-2 truncate pr-3 text-xs md:col-start-auto md:w-full md:border-border/55 md:border-l md:px-3 md:py-3 ${TONE_CLASS[v.tone]}`}
-								title={v.text}
-							>
-								{v.text}
-							</span>
+							{!expanded && (
+								<>
+									<div className="col-start-2 min-w-0 pr-3 md:col-start-auto md:flex md:w-full md:justify-center md:border-border/55 md:border-l md:px-3 md:py-3">
+										<ScoreMeter score={score} level={d?.risk_level ?? null} />
+									</div>
+									<div className="col-start-2 pr-3 md:col-start-auto md:flex md:w-full md:justify-center md:border-border/55 md:border-l md:px-3 md:py-3">
+										<SignalChips data={d} t={t} className="md:justify-center" />
+									</div>
+									<span
+										className={`col-start-2 truncate pr-3 text-xs md:col-start-auto md:w-full md:border-border/55 md:border-l md:px-3 md:py-3 ${TONE_CLASS[v.tone]}`}
+										title={v.text}
+									>
+										{v.text}
+									</span>
+								</>
+							)}
 						</button>
 						{expanded && <DetailPanel source={source} />}
 					</div>

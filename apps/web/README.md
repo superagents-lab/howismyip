@@ -40,12 +40,15 @@ pnpm run test
 ## Environment
 
 Keyless providers run without configuration. Optional paid providers activate
-only when their credentials are present. Copy the root example file when
-running locally:
+only when their credentials are present. Copy the local template when running
+the web app locally:
 
 ```bash
-cp ../../.env.example .env
+cp .env.example .env
 ```
+
+The local dev server reads `.env` from this directory. The CLI does not read
+this file; use shell environment variables for CLI lookups.
 
 Common optional secrets:
 
@@ -68,8 +71,6 @@ switch to `0`, `false`, `no`, or `off` to disable that provider:
 - `HOWISMYIP_PROVIDER_CYMRU_ENABLED`
 - `HOWISMYIP_PROVIDER_IP2LOCATION_ENABLED`
 - `HOWISMYIP_PROVIDER_IPAPI_IS_ENABLED`
-- `HOWISMYIP_PROVIDER_TOR_ENABLED`
-- `HOWISMYIP_PROVIDER_DNSBL_ENABLED`
 - `HOWISMYIP_PROVIDER_PROXYCHECK_ENABLED`
 - `HOWISMYIP_PROVIDER_IPINFO_ENABLED`
 - `HOWISMYIP_PROVIDER_SCAMALYTICS_ENABLED`

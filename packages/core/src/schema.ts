@@ -16,7 +16,7 @@ export type ProviderCategory =
   | 'network' // ASN / routing attribution
   | 'risk' // fraud / proxy / abuse scoring
   | 'registry' // authoritative WHOIS/RDAP allocation data
-  | 'blocklist'; // presence on DNS blocklists / threat feeds
+  | 'blocklist'; // presence on threat feeds / upstream blocklists
 
 /** A single normalized record from one provider. */
 export interface IpIntelligence {

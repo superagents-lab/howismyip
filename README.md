@@ -4,10 +4,10 @@
 
 `whatismyip` tells you *what* your IP is. **howismyip** tells you *how* it is:
 its reputation, risk, and provenance, cross-checked across many independent
-sources at once. Is it a proxy / VPN / Tor exit / datacenter IP? Is it marked
+sources at once. Is it a proxy / VPN / Tor / datacenter IP? Is it marked
 as hosting, an abuser, or a crawler? What's its ASN, ISP, geolocation, owning
-registry? Is it on any blocklists? Ask once, get every source's answer plus a
-transparent factual summary.
+registry? Ask once, get every source's answer plus a transparent factual
+summary.
 
 Built with the **TanStack** full stack (Start + Router + server functions),
 a geek/terminal aesthetic, English/中文 UI (URL-based, `/en` · `/zh`), and an
@@ -20,7 +20,7 @@ a **CLI** and a **Claude Code skill** so agents can call it. Open source (MIT).
 
 ## Sources
 
-Eight sources run with **no API key** — clone, install, go:
+Six sources run with **no API key** — clone, install, go:
 
 | Source | Category | Provides |
 | --- | --- | --- |
@@ -30,11 +30,9 @@ Eight sources run with **no API key** — clone, install, go:
 | Team Cymru | network | BGP-derived origin ASN, announced prefix, registry (via DoH) |
 | IP2Location | risk | public lookup page scrape: fraud score, usage type, proxy/VPN/Tor/datacenter flags |
 | ipapi.is | risk | abuse score, ASN/company type, proxy/VPN/Tor/datacenter/abuser/crawler flags |
-| Tor exit list | risk | is the IP a known Tor exit node |
-| DNS blocklists | blocklist | Spamhaus / SpamCop / DroneBL / s5h presence |
 
-Seven more activate automatically **when you provide an API key** (see
-[`.env.example`](.env.example)):
+Seven more activate automatically **when you provide an API key**. For the web
+app, use [`apps/web/.env.example`](apps/web/.env.example) as the local template:
 
 | Source | Env | Provides |
 | --- | --- | --- |
@@ -83,7 +81,7 @@ pnpm dev              # web app at http://localhost:3000
 Optional paid sources:
 
 ```bash
-cp .env.example apps/web/.env   # fill in any keys you have
+cp apps/web/.env.example apps/web/.env   # fill in any keys you have
 ```
 
 ## Four ways to use it
@@ -106,11 +104,17 @@ howismyip 8.8.8.8            # colored summary
 howismyip 8.8.8.8 --json     # raw aggregated JSON
 howismyip                    # your own public IP
 
+# Local paid provider keys are read from shell environment variables:
+export PROXYCHECK_API_KEY=...
+howismyip 8.8.8.8
+
 # Point at a deployed instance (uses its configured paid sources):
 HOWISMYIP_BASE_URL=https://your-instance howismyip 8.8.8.8
 ```
 
-By default the CLI runs the keyless sources locally — no server needed.
+By default the CLI runs the keyless sources locally — no server needed. The CLI
+does not read the web app's `.env`; use shell `export` for now, with a
+user-level config file planned for later.
 
 **4. Agent skill** — [`skills/howismyip`](skills/howismyip/SKILL.md) is a Claude
 Code skill wrapping the CLI, so agents can vet IPs across sources on demand.
@@ -156,7 +160,7 @@ echo "$PROXYCHECK_API_KEY" | pnpm dlx wrangler secret put PROXYCHECK_API_KEY
 pnpm run deploy                               # build + wrangler deploy
 ```
 
-The eight keyless sources work with no secrets. To serve a custom domain, add it
+The six keyless sources work with no secrets. To serve a custom domain, add it
 to your Cloudflare account and set a route in `wrangler.jsonc`.
 
 ## Development
