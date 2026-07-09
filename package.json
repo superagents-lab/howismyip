@@ -13,13 +13,12 @@
     "build": "pnpm -r build",
     "dev": "pnpm --filter @howismyip/web dev",
     "test": "pnpm -r test",
-    "check": "biome check packages/",
-    "format": "biome check --write packages/"
+    "check": "biome check .",
+    "format": "biome check --write ."
   },
   "devDependencies": {
-    "@biomejs/biome": "1.9.4",
+    "@biomejs/biome": "2.4.5",
     "@types/node": "^22.19.21",
-    "typescript": "^5.8.3",
-    "ultracite": "^4.2.1"
+    "typescript": "^5.8.3"
   }
 }

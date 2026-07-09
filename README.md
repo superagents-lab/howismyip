@@ -190,8 +190,9 @@ to your Cloudflare account and set a route in `wrangler.jsonc`.
 
 ```bash
 pnpm -r build     # build every package
-pnpm -r test      # run unit tests (core)
-pnpm check        # biome lint/format (core + cli)
+pnpm -r test      # run unit tests (core + web)
+pnpm check        # biome lint/format for the whole repo
+pnpm format       # same, applying safe fixes
 ```
 
 ## License

@@ -1,5 +1,5 @@
-import { riskLevelFromScore } from '../schema.js';
 import type { IpIntelligence } from '../schema.js';
+import { riskLevelFromScore } from '../schema.js';
 import { asDict, first, toInt, toStr, yesNoToBool } from './helpers.js';
 import type { IpProvider } from './types.js';
 

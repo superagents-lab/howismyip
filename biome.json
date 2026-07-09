@@ -1,27 +1,30 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
-  "extends": ["ultracite"],
-  "files": {
-    "ignore": [
-      "**/dist/**",
-      "**/.output/**",
-      "**/.tanstack/**",
-      "**/.nitro/**",
-      "**/routeTree.gen.ts",
-      "apps/web/**"
-    ]
+  "$schema": "https://biomejs.dev/schemas/2.4.5/schema.json",
+  "vcs": {
+    "enabled": false,
+    "clientKind": "git",
+    "useIgnoreFile": false
   },
-  "overrides": [
-    {
-      "include": ["packages/cli/**", "packages/core/**"],
-      "linter": {
-        "rules": {
-          "suspicious": {
-            "noConsole": "off",
-            "noConsoleLog": "off"
-          }
-        }
-      }
+  "files": {
+    "ignoreUnknown": true,
+    "includes": ["packages/**", "*.json", "!**/dist"]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2
+  },
+  "assist": { "actions": { "source": { "organizeImports": "on" } } },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true
     }
-  ]
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "trailingCommas": "es5"
+    }
+  }
 }
