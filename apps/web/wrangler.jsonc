@@ -3,7 +3,8 @@
   "name": "howismyip",
   "compatibility_date": "2025-09-02",
   "compatibility_flags": ["nodejs_compat"],
-  "main": "@tanstack/react-start/server-entry",
+  // Custom entry: re-exports the TanStack Start handler + Durable Object classes.
+  "main": "src/server-entry.ts",
   "workers_dev": true,
   "observability": { "enabled": true },
   "routes": [{ "pattern": "howismyip.xyz", "custom_domain": true }],
@@ -13,5 +14,11 @@
       "namespace_id": "1001",
       "simple": { "limit": 60, "period": 60 }
     }
-  ]
+  ],
+  // Per-provider daily quota counter; budgets come from
+  // HOWISMYIP_PROVIDER_<ID>_DAILY_BUDGET vars (no budget vars = counter idle).
+  "durable_objects": {
+    "bindings": [{ "name": "PROVIDER_QUOTA", "class_name": "ProviderQuota" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["ProviderQuota"] }]
 }

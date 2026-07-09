@@ -7,7 +7,7 @@ import type { IpIntelligence } from './schema.js';
 function fakeProvider(
   id: string,
   data: Partial<IpIntelligence> | null,
-  opts: { throws?: boolean } = {}
+  opts: { throws?: boolean; onCall?: () => void } = {}
 ): IpProvider {
   return {
     id,
@@ -16,6 +16,7 @@ function fakeProvider(
     requiresKey: false,
     sourceUrl: (ip) => `https://example.com/${ip}`,
     lookup() {
+      opts.onCall?.();
       if (opts.throws) {
         throw new Error('boom');
       }
@@ -81,6 +82,36 @@ test('records per-source status without failing the whole report', async () => {
   assert.equal(byId.boom.status, 'error');
   assert.equal(byId.boom.error, 'boom');
   assert.equal(report.consensus.asn, 'AS15169');
+  assert.equal(report.consensus.source_count, 1);
+});
+
+test('skipProviderIds marks the provider skipped without calling it', async () => {
+  let called = false;
+  const report = await lookupIpWith(
+    [
+      fakeProvider('live', { country_code: 'US' }),
+      fakeProvider(
+        'quota-bound',
+        { country_code: 'DE' },
+        {
+          onCall: () => {
+            called = true;
+          },
+        }
+      ),
+    ],
+    '8.8.8.8',
+    {},
+    { skipProviderIds: ['quota-bound'], skipReason: 'daily quota exhausted' }
+  );
+  assert.equal(called, false);
+  const row = report.sources.find((s) => s.id === 'quota-bound');
+  assert.equal(row?.status, 'skipped');
+  assert.equal(row?.data, null);
+  assert.equal(row?.error, 'daily quota exhausted');
+  assert.equal(row?.sourceUrl, 'https://example.com/8.8.8.8');
+  // Skipped providers contribute nothing to the merged view.
+  assert.equal(report.consensus.country_code, 'US');
   assert.equal(report.consensus.source_count, 1);
 });
 

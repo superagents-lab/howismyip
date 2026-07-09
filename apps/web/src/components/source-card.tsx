@@ -133,6 +133,9 @@ export function SourceCard({ source }: { source: ProviderResult }) {
 				{source.status === "empty" && (
 					<p className="text-muted text-xs">{t.card.noData}</p>
 				)}
+				{source.status === "skipped" && (
+					<p className="text-muted text-xs">{t.card.quotaExhausted}</p>
+				)}
 				{d && (
 					<>
 						{d.risk_score !== null && (

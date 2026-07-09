@@ -5,6 +5,7 @@ import {
   expandIpv6,
   isPrivateOrReserved,
   isValidIp,
+  normalizeIp,
   reverseLabels,
 } from './ip.js';
 
@@ -43,6 +44,25 @@ test('reverseLabels for v4 and v6', () => {
     reverseLabels('2001:4860:4860::8888')?.startsWith('8.8.8.8'),
     true
   );
+});
+
+test('normalizeIp canonicalizes equal addresses to equal strings', () => {
+  assert.equal(normalizeIp(' 8.8.8.8 '), '8.8.8.8');
+  assert.equal(normalizeIp('010.001.0.1'), '10.1.0.1');
+  assert.equal(normalizeIp('2001:DB8::1'), '2001:db8::1');
+  assert.equal(normalizeIp('2606:4700:0:0:0:0:0:1111'), '2606:4700::1111');
+  assert.equal(
+    normalizeIp('2606:4700:0000:0000:0000:0000:0000:1111'),
+    '2606:4700::1111'
+  );
+  // Leftmost longest zero run wins; single zero groups stay uncompressed.
+  assert.equal(normalizeIp('1:0:0:1:0:0:0:1'), '1:0:0:1::1');
+  assert.equal(normalizeIp('1:0:2:3:4:5:6:7'), '1:0:2:3:4:5:6:7');
+  assert.equal(normalizeIp('::1'), '::1');
+  assert.equal(normalizeIp('::'), '::');
+  assert.equal(normalizeIp('fe80::'), 'fe80::');
+  assert.equal(normalizeIp('999.1.1.1'), null);
+  assert.equal(normalizeIp('not-an-ip'), null);
 });
 
 test('isPrivateOrReserved', () => {

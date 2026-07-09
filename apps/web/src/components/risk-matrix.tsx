@@ -45,6 +45,9 @@ function verdict(
 	if (s.status === "error") {
 		return { text: `! ${s.error ?? "error"}`, tone: "bad" };
 	}
+	if (s.status === "skipped") {
+		return { text: t.card.quotaExhausted, tone: "muted" };
+	}
 	if (s.status === "empty" || !s.data) {
 		return { text: t.card.noData, tone: "muted" };
 	}
@@ -183,6 +186,9 @@ function DetailPanel({ source }: { source: ProviderResult }) {
 			)}
 			{source.status === "empty" && (
 				<p className="px-3 py-3 text-muted text-xs">{t.card.noData}</p>
+			)}
+			{source.status === "skipped" && (
+				<p className="px-3 py-3 text-muted text-xs">{t.card.quotaExhausted}</p>
 			)}
 
 			{d && (

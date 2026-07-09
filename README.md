@@ -69,6 +69,27 @@ Provider runtime is configured uniformly:
   credentials are present.
 - `HOWISMYIP_PROVIDER_TIMEOUT_MS` sets the shared per-provider timeout. The
   default is `10000`.
+- `HOWISMYIP_PROVIDER_<PROVIDER_ID>_DAILY_BUDGET` (optional) caps how many
+  upstream calls a provider may make per UTC day — for hosted deployments
+  running providers on limited free plans. Once spent, the provider is
+  reported as status `skipped` (shown as "daily quota exhausted" in the UI)
+  until the next day. Enforced by a Durable Object on the Cloudflare
+  deployment; ignored elsewhere. Unset means unlimited.
+
+### Abuse protection (hosted deployments)
+
+The web app ships with layered protection so a public instance can't be
+farmed dry:
+
+- **Per-client rate limit** (Cloudflare Rate Limiting binding, 60 req/min per
+  IP) on the JSON API *and* the server functions behind the UI.
+- **Edge cache** keyed by the RFC 5952-normalized IP (6 h TTL), so repeat
+  lookups and textual IPv6 variants don't re-hit providers.
+- **Per-provider daily budgets** (above) as the last line of defense against
+  distributed traffic.
+
+All three fail open: on runtimes without the Cloudflare bindings (local dev,
+other hosts) lookups simply run unprotected.
 
 ## Quick start
 
@@ -139,7 +160,9 @@ hosting, abuser, crawler, type, and reason signals stay per-source — agreement
 and disagreement across sources is shown, never collapsed into one number.
 Adding a source = one new adapter.
 
-The service is **stateless** — every lookup queries live, nothing is persisted.
+The service keeps **no database** — lookups are served live or from a
+short-lived edge cache; the only durable state is the per-provider daily
+quota counter (a Durable Object) on hosted deployments.
 `packages/core` has **zero runtime dependencies** and is runtime-agnostic: it
 uses only `fetch` (DNS lookups go over DNS-over-HTTPS, not `node:dns`), so it
 runs on Node, Bun, Deno, and Cloudflare Workers alike.

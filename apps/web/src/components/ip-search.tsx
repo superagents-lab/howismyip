@@ -66,9 +66,11 @@ export function IpSearch({ initial = "" }: { initial?: string }) {
 				return;
 			}
 			setNote(
-				self.reason === "private" && self.ip
-					? t.search.notePrivate(self.ip)
-					: t.search.noteUndetectable,
+				self.reason === "rateLimited"
+					? t.error.rateLimited
+					: self.reason === "private" && self.ip
+						? t.search.notePrivate(self.ip)
+						: t.search.noteUndetectable,
 			);
 		} finally {
 			setScanning(false);

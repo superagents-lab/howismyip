@@ -83,6 +83,7 @@ const en = {
 		latency: "latency",
 		evidence: "evidence",
 		noData: "no data for this IP",
+		quotaExhausted: "daily quota exhausted — source paused until tomorrow",
 		risk: "risk",
 		listed: "listed:",
 		notListed: "not on any blocklist",
@@ -131,6 +132,7 @@ const en = {
 	error: {
 		invalid: (ip: string) => `"${ip}" is not a valid IP address.`,
 		failed: "lookup failed.",
+		rateLimited: "too many requests from your address — try again in a minute.",
 	},
 };
 
@@ -209,6 +211,7 @@ const zh: Dictionary = {
 		latency: "耗时",
 		evidence: "证据",
 		noData: "该源无此 IP 数据",
+		quotaExhausted: "今日配额已用尽 —— 该源暂停至明天",
 		risk: "风险",
 		listed: "命中：",
 		notListed: "未命中任何黑名单",
@@ -257,6 +260,7 @@ const zh: Dictionary = {
 	error: {
 		invalid: (ip: string) => `“${ip}” 不是合法的 IP 地址。`,
 		failed: "查询失败。",
+		rateLimited: "你的地址请求过于频繁 —— 请一分钟后再试。",
 	},
 };
 

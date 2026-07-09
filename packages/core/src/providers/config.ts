@@ -49,6 +49,30 @@ export function providerEnabledEnvName(provider: IpProvider): string {
   return enabledEnvName(provider.id);
 }
 
+export function providerDailyBudgetEnvName(provider: IpProvider): string {
+  return `HOWISMYIP_PROVIDER_${envToken(provider.id)}_DAILY_BUDGET`;
+}
+
+/**
+ * Optional per-provider daily call budget (UTC day), for hosted deployments
+ * living on limited upstream plans. Unset/empty/invalid means unlimited.
+ * `0` is valid and means "never call" while still listing the provider.
+ */
+export function providerDailyBudget(
+  provider: IpProvider,
+  env: Env
+): number | null {
+  const raw = env[providerDailyBudgetEnvName(provider)];
+  if (raw === undefined || raw.trim() === '') {
+    return null;
+  }
+  const parsed = Number.parseInt(raw, 10);
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    return null;
+  }
+  return parsed;
+}
+
 export function isProviderEnabled(provider: IpProvider, env: Env): boolean {
   const enabled = parseBool(env[enabledEnvName(provider.id)]);
   if (enabled === false) {

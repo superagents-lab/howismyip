@@ -23,9 +23,11 @@ function IpDetail() {
 	const errorText =
 		errorCode === "invalid"
 			? t.error.invalid(ip)
-			: errorCode
-				? t.error.failed
-				: null;
+			: errorCode === "rateLimited"
+				? t.error.rateLimited
+				: errorCode
+					? t.error.failed
+					: null;
 
 	return (
 		<main className="mx-auto max-w-5xl px-4 py-8">

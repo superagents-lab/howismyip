@@ -5,19 +5,24 @@ import {
 	type IpReport,
 	isPrivateOrReserved,
 	isValidIp,
-	lookupIp,
 	type ProviderCategory,
 } from "@howismyip/core";
 import { createServerFn } from "@tanstack/react-start";
 import { detectClientIp } from "./client-ip.server";
+import { cachedLookup } from "./lookup-cache";
+import { isRateLimited } from "./rate-limit.server";
 
 // NOTE: every value imported from `@howismyip/core` (which pulls in node:dns)
 // is used ONLY inside server-function handlers below, so the TanStack Start
 // build strips it from the client bundle. Keep it that way — do not reference
 // core runtime from module top-level or from a non-handler export.
 
+// These server functions are exposed by TanStack Start as public `/_serverFn/`
+// HTTP endpoints, so they share the SAME rate limit + cache pipeline as the
+// JSON API routes — otherwise they'd be an unmetered bypass around both.
+
 /** Error codes are translated client-side so the UI can localize them. */
-export type LookupErrorCode = "invalid" | "failed";
+export type LookupErrorCode = "invalid" | "failed" | "rateLimited";
 
 export interface LookupResult {
 	report: IpReport | null;
@@ -28,8 +33,12 @@ export interface LookupResult {
 export const lookupIpFn = createServerFn({ method: "GET" })
 	.validator((ip: unknown) => String(ip ?? "").trim())
 	.handler(async ({ data }): Promise<LookupResult> => {
+		if (await isRateLimited()) {
+			return { report: null, errorCode: "rateLimited" };
+		}
 		try {
-			return { report: await lookupIp(data), errorCode: null };
+			const { report } = await cachedLookup(data);
+			return { report, errorCode: null };
 		} catch (err) {
 			return {
 				report: null,
@@ -41,8 +50,9 @@ export const lookupIpFn = createServerFn({ method: "GET" })
 export interface SelfLookup {
 	ip: string | null;
 	report: IpReport | null;
-	/** Set when an IP was detected but isn't publicly routable (local dev, LAN). */
-	reason: "private" | "undetectable" | null;
+	/** Set when an IP was detected but isn't publicly routable (local dev, LAN),
+	 *  or when the caller is over the per-client rate limit. */
+	reason: "private" | "undetectable" | "rateLimited" | null;
 }
 
 /** Our egress IP via a public echo service — the fallback when request headers
@@ -65,6 +75,9 @@ export async function fetchEgressIp(): Promise<string | null> {
  *  still returns a real public IP in local dev where headers give only ::1. */
 export const lookupSelfFn = createServerFn({ method: "GET" }).handler(
 	async (): Promise<SelfLookup> => {
+		if (await isRateLimited()) {
+			return { ip: null, report: null, reason: "rateLimited" };
+		}
 		const headerIp = await detectClientIp();
 		let ip =
 			headerIp && isValidIp(headerIp) && !isPrivateOrReserved(headerIp)
@@ -80,7 +93,8 @@ export const lookupSelfFn = createServerFn({ method: "GET" }).handler(
 				reason: headerIp ? "private" : "undetectable",
 			};
 		}
-		return { ip, report: await lookupIp(ip), reason: null };
+		const { report } = await cachedLookup(ip);
+		return { ip, report, reason: null };
 	},
 );
 

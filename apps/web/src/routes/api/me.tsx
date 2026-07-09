@@ -1,7 +1,8 @@
-import { isPrivateOrReserved, isValidIp, lookupIp } from "@howismyip/core";
+import { isPrivateOrReserved, isValidIp } from "@howismyip/core";
 import { createFileRoute } from "@tanstack/react-router";
 import { detectClientIp } from "../../server/client-ip.server";
 import { fetchEgressIp } from "../../server/lookup";
+import { cachedLookup } from "../../server/lookup-cache";
 import { rateLimitGuard } from "../../server/rate-limit.server";
 
 const CORS = { "access-control-allow-origin": "*" } as const;
@@ -30,8 +31,10 @@ export const Route = createFileRoute("/api/me")({
 					);
 				}
 				try {
-					const report = await lookupIp(ip);
-					return Response.json(report, { headers: CORS });
+					const { report, cache } = await cachedLookup(ip);
+					return Response.json(report, {
+						headers: { ...CORS, "x-cache": cache },
+					});
 				} catch (err) {
 					return Response.json(
 						{ error: err instanceof Error ? err.message : "lookup failed" },

@@ -98,11 +98,12 @@ export function ReportView({ report }: { report: IpReport }) {
 
 	const responded = report.sources.filter((s) => s.status === "ok").length;
 
+	// Skipped sources stay visible: a paused provider (daily quota spent) is
+	// information the matrix should show, not hide.
 	const riskSources = report.sources.filter(
 		(s) =>
 			(s.category === "risk" || s.category === "blocklist") &&
-			s.status === "ok" &&
-			s.data,
+			((s.status === "ok" && s.data) || s.status === "skipped"),
 	);
 
 	return (

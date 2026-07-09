@@ -4,13 +4,43 @@ import { enabledProviders } from './providers/index.js';
 import type { Env, IpProvider } from './providers/types.js';
 import {
   type Consensus,
+  emptyIntelligence,
   type FactKey,
   type FactSummary,
   type IpIntelligence,
   type IpReport,
   type ProviderResult,
-  emptyIntelligence,
 } from './schema.js';
+
+/** Per-call knobs for a lookup. Currently only provider skipping. */
+export interface LookupOptions {
+  /**
+   * Providers to report as `skipped` instead of calling — e.g. a hosted
+   * deployment whose daily quota for that provider is exhausted.
+   */
+  skipProviderIds?: Iterable<string>;
+  /** Human-readable reason recorded on each skipped result's `error` field. */
+  skipReason?: string;
+}
+
+/** A result row for a provider that was deliberately not called. */
+function skippedResult(
+  provider: IpProvider,
+  ip: string,
+  reason: string | undefined
+): ProviderResult {
+  return {
+    id: provider.id,
+    name: provider.name,
+    category: provider.category,
+    requiresKey: provider.requiresKey,
+    sourceUrl: provider.sourceUrl(ip),
+    status: 'skipped',
+    durationMs: 0,
+    data: null,
+    error: reason ?? null,
+  };
+}
 
 /** Run one provider, timing it and normalizing the outcome into a ProviderResult. */
 async function runProvider(
@@ -193,15 +223,21 @@ export class InvalidIpError extends Error {
 export async function lookupIpWith(
   providers: IpProvider[],
   ip: string,
-  env: Env = process.env
+  env: Env = process.env,
+  options: LookupOptions = {}
 ): Promise<IpReport> {
   const trimmed = ip.trim();
   if (!isValidIp(trimmed)) {
     throw new InvalidIpError(ip);
   }
   const timeoutMs = providerTimeoutMs(env);
+  const skip = new Set(options.skipProviderIds ?? []);
   const sources = await Promise.all(
-    providers.map((p) => runProvider(p, trimmed, env, timeoutMs))
+    providers.map((p) =>
+      skip.has(p.id)
+        ? Promise.resolve(skippedResult(p, trimmed, options.skipReason))
+        : runProvider(p, trimmed, env, timeoutMs)
+    )
   );
   return {
     ip: trimmed,
@@ -219,7 +255,8 @@ export async function lookupIpWith(
  */
 export function lookupIp(
   ip: string,
-  env: Env = process.env
+  env: Env = process.env,
+  options: LookupOptions = {}
 ): Promise<IpReport> {
-  return lookupIpWith(enabledProviders(env), ip, env);
+  return lookupIpWith(enabledProviders(env), ip, env, options);
 }
