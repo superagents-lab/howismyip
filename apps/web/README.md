@@ -95,3 +95,12 @@ pnpm run deploy
 ```
 
 Skip any provider secret you do not use.
+
+**Git-connected deploys (Cloudflare Workers Builds):** the repo is a pnpm
+monorepo — `wrangler.jsonc` lives in this directory, not the repo root — so
+the Worker's **Root directory must be set to `apps/web`**. Otherwise
+`wrangler deploy` runs from the workspace root, can't find a Worker to
+target, and fails with "The Cloudflare application detection logic has been
+run in the root of a workspace". Build/deploy/version commands can stay at
+their defaults; this package's own `build` script already builds
+`packages/core` first regardless of which directory it's invoked from.

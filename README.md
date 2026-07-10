@@ -81,7 +81,7 @@ are present). Provider ids are used verbatim (`ip-api`, `ipapi-is`, …):
 The web app ships with layered protection so a public instance can't be
 farmed dry:
 
-- **Per-client rate limit** (Cloudflare Rate Limiting binding, 60 req/min per
+- **Per-client rate limit** (Cloudflare Rate Limiting binding, 20 req/min per
   IP) on the JSON API *and* the server functions behind the UI.
 - **Edge cache** keyed by the RFC 5952-normalized IP (6 h TTL), so repeat
   lookups and textual IPv6 variants don't re-hit providers.
@@ -185,6 +185,17 @@ pnpm run deploy                               # build + wrangler deploy
 
 The six keyless sources work with no secrets. To serve a custom domain, add it
 to your Cloudflare account and set a route in `wrangler.jsonc`.
+
+**Git-connected deploys (Cloudflare Workers Builds):** this repo is a pnpm
+monorepo, so if you connect it for automatic build-on-push deploys, set the
+Worker's **Root directory to `apps/web`** — that's where `wrangler.jsonc`
+lives, and both the build and deploy commands run from that directory.
+Leave the build/deploy/version commands at their defaults (`pnpm run build`,
+`npx wrangler deploy`, `npx wrangler versions upload`); `apps/web`'s own
+build script already builds its `packages/core` dependency first. Scope the
+build watch paths to `apps/web/**` and `packages/core/**` so unrelated
+changes elsewhere in the monorepo (e.g. `packages/cli`) don't trigger a
+rebuild.
 
 ## Development
 
