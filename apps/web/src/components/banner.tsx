@@ -3,6 +3,7 @@ import { locales } from "../i18n/messages";
 import { useLocale, useT } from "../i18n/use-t";
 
 const LABELS: Record<string, string> = { en: "EN", zh: "中" };
+const GITHUB_URL = "https://github.com/superagents-lab/howismyip";
 
 /** EN/中 switch that preserves the current page (home vs IP detail). */
 function LangToggle() {
@@ -37,8 +38,16 @@ export function Banner() {
 			<Link
 				to="/$lang"
 				params={{ lang: locale }}
-				className="min-w-0 no-underline hover:no-underline"
+				className="brand-link flex min-w-0 items-center gap-2 no-underline"
 			>
+				<img
+					src="/icon.svg"
+					alt=""
+					width={32}
+					height={32}
+					aria-hidden="true"
+					className="size-8 shrink-0"
+				/>
 				<div className="text-phosphor leading-tight text-[13px] sm:text-base">
 					<div>
 						{"┌─[ "}
@@ -51,7 +60,17 @@ export function Banner() {
 					</div>
 				</div>
 			</Link>
-			<LangToggle />
+			<div className="flex shrink-0 items-center gap-3 text-xs">
+				<a
+					href={GITHUB_URL}
+					target="_blank"
+					rel="noreferrer"
+					className="text-muted no-underline hover:text-phosphor"
+				>
+					GitHub ↗
+				</a>
+				<LangToggle />
+			</div>
 		</header>
 	);
 }

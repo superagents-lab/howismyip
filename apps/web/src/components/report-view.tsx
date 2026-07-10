@@ -12,17 +12,11 @@ function primaryFactValue(fact: FactSummary) {
 
 function BasicFacts({ facts, t }: { facts: FactSummary[]; t: Dictionary }) {
 	const [expandedFact, setExpandedFact] = useState<string | null>(null);
-	const sourceCount = new Set(
-		facts.flatMap((fact) => fact.values.flatMap((value) => value.sources)),
-	).size;
 
 	return (
 		<div className="space-y-3">
-			<div className="flex items-center justify-between gap-3 border-border border-b pb-2">
+			<div className="border-border border-b pb-2">
 				<h2 className="text-muted text-xs">{t.report.sectionFacts}</h2>
-				<span className="text-muted text-[11px]">
-					{sourceCount} {t.report.sources}
-				</span>
 			</div>
 			{facts.length === 0 && (
 				<p className="text-muted text-xs">{t.report.noFacts}</p>
@@ -39,10 +33,10 @@ function BasicFacts({ facts, t }: { facts: FactSummary[]; t: Dictionary }) {
 							data-testid={`fact-sources-${fact.key}`}
 							aria-expanded={expanded}
 							onClick={toggle}
-							className={`grid w-full cursor-pointer grid-cols-[6rem_1fr] items-start gap-3 border-border/50 border-b border-l-2 py-2 pl-2 text-left outline-none last:border-b-0 hover:bg-panel-2/60 focus-visible:bg-panel-2 focus-visible:ring-1 focus-visible:ring-phosphor-dim sm:last:border-b ${
+							className={`grid w-full cursor-pointer grid-cols-[6rem_1fr] items-start gap-3 border px-2 py-2 text-left outline-none hover:bg-panel-2/60 focus-visible:bg-panel-2 focus-visible:ring-1 focus-visible:ring-phosphor-dim ${
 								expanded
-									? "border-l-phosphor-dim bg-panel-2/70"
-									: "border-l-transparent"
+									? "border-phosphor-dim bg-panel-2/70"
+									: "border-transparent border-b-border/50"
 							}`}
 						>
 							<span className="text-muted text-xs">{t.fact[fact.key]}</span>
@@ -96,8 +90,6 @@ export function ReportView({ report }: { report: IpReport }) {
 		});
 	}
 
-	const responded = report.sources.filter((s) => s.status === "ok").length;
-
 	// Skipped sources stay visible: a paused provider (daily quota spent) is
 	// information the matrix should show, not hide.
 	const riskSources = report.sources.filter(
@@ -105,12 +97,32 @@ export function ReportView({ report }: { report: IpReport }) {
 			(s.category === "risk" || s.category === "blocklist") &&
 			((s.status === "ok" && s.data) || s.status === "skipped"),
 	);
+	const evaluatedRiskSources = riskSources.filter(
+		(source) => source.status === "ok" && source.data,
+	);
+	const observedRiskLevels = evaluatedRiskSources.flatMap((source) =>
+		source.data?.risk_level ? [source.data.risk_level] : [],
+	);
+	const highRiskCount = observedRiskLevels.filter(
+		(level) => level === "high",
+	).length;
+	const failedSources = report.sources.filter(
+		(source) => source.status === "error",
+	);
+	const sourceIssues = failedSources
+		.map((source) => {
+			const reason = source.error?.toLowerCase().includes("timeout")
+				? t.report.timedOut
+				: t.report.failed;
+			return `${source.name} — ${reason}`;
+		})
+		.join(" · ");
 
 	return (
 		<div className="space-y-5">
 			<div className="border border-border bg-panel">
-				<div className="flex flex-wrap items-center justify-between gap-2 border-border border-b bg-panel-2 px-4 py-2">
-					<span className="font-bold text-fg text-lg">{report.ip}</span>
+				<div className="flex flex-wrap items-center justify-between gap-3 border-border border-b bg-panel-2 px-4 py-2">
+					<div className="font-bold text-fg text-lg">{report.ip}</div>
 					<div className="flex gap-2 text-xs">
 						<button
 							type="button"
@@ -146,13 +158,24 @@ export function ReportView({ report }: { report: IpReport }) {
 				</pre>
 			)}
 
-			<div className="text-muted text-xs">
-				{t.report.queried(report.sources.length, responded, riskSources.length)}
-			</div>
+			{sourceIssues ? (
+				<div className="text-amber text-xs">
+					{t.report.sourceIssues(sourceIssues)}
+				</div>
+			) : null}
 
 			{riskSources.length > 0 && (
 				<section>
-					<h2 className="mb-2 text-muted text-xs">{t.report.sectionRisk}</h2>
+					<div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+						<h2 className="text-muted text-xs">{t.report.sectionRisk}</h2>
+						<span
+							className={
+								highRiskCount > 0 ? "text-danger text-xs" : "text-muted text-xs"
+							}
+						>
+							{t.report.riskSummary(highRiskCount, evaluatedRiskSources.length)}
+						</span>
+					</div>
 					<RiskMatrix sources={riskSources} />
 				</section>
 			)}

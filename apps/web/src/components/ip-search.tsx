@@ -96,6 +96,7 @@ export function IpSearch({ initial = "" }: { initial?: string }) {
 						autoFocus
 						value={value}
 						onChange={(e) => setValue(e.target.value)}
+						aria-label={t.search.inputLabel}
 						placeholder={t.search.placeholder}
 						spellCheck={false}
 						autoCapitalize="off"
@@ -108,7 +109,7 @@ export function IpSearch({ initial = "" }: { initial?: string }) {
 				<button
 					type="submit"
 					disabled={busy || !value.trim()}
-					className="border border-phosphor-dim bg-panel px-4 py-2 text-phosphor hover:bg-phosphor hover:text-bg disabled:opacity-70"
+					className="border border-phosphor-dim bg-panel px-4 py-2 text-phosphor hover:bg-phosphor hover:text-bg disabled:cursor-not-allowed disabled:border-border disabled:text-muted disabled:opacity-60 disabled:hover:bg-panel disabled:hover:text-muted"
 				>
 					{searching ? t.search.searching : t.search.run}
 				</button>
@@ -116,7 +117,7 @@ export function IpSearch({ initial = "" }: { initial?: string }) {
 					type="button"
 					onClick={scanSelf}
 					disabled={busy}
-					className="border border-border bg-panel px-4 py-2 text-muted hover:border-phosphor-dim hover:text-fg disabled:opacity-70"
+					className="border border-border bg-panel px-4 py-2 text-muted hover:border-phosphor-dim hover:text-fg disabled:cursor-not-allowed disabled:opacity-60"
 				>
 					{scanning ? t.search.scanning : t.search.scan}
 				</button>

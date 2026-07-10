@@ -20,9 +20,23 @@ import {
 } from "@howismyip/core";
 import { QUOTA_SKIP_REASON, quotaExhaustedProviders } from "./provider-quota";
 
-// IP intelligence is stable over hours; a long TTL is what makes popular IPs
-// and repeat visitors nearly free instead of a fresh multi-provider fan-out.
+// Complete IP intelligence is stable over hours. Partial reports with a
+// provider error get a short TTL so transient upstream failures can recover
+// without making every refresh burn another full provider fan-out.
 const CACHE_TTL_SECONDS = 21_600; // 6h
+const PARTIAL_CACHE_TTL_SECONDS = 300; // 5m
+const CACHE_KEY_VERSION = 2;
+
+export function cacheTtlSecondsForStatuses(
+	statuses: Iterable<IpReport["sources"][number]["status"]>,
+): number {
+	for (const status of statuses) {
+		if (status === "error") {
+			return PARTIAL_CACHE_TTL_SECONDS;
+		}
+	}
+	return CACHE_TTL_SECONDS;
+}
 
 /**
  * The slice of the Cloudflare Workers Cache API we use. Declared locally because
@@ -50,7 +64,7 @@ function edgeCache(): EdgeCache | null {
 /** Stable cache key for a normalized IP. */
 function cacheKey(ip: string): Request {
 	return new Request(
-		`https://howismyip.internal/cache/lookup/${encodeURIComponent(ip)}`,
+		`https://howismyip.internal/cache/v${CACHE_KEY_VERSION}/lookup/${encodeURIComponent(ip)}`,
 	);
 }
 
@@ -73,8 +87,8 @@ function computeReport(ip: string): Promise<IpReport> {
 
 /**
  * Look up `rawIp` behind the edge cache. Throws `InvalidIpError` on garbage
- * input (before touching cache or quota); never caches failures — `lookupIp`
- * itself absorbs per-provider errors into the report.
+ * input (before touching cache or quota). `lookupIp` absorbs per-provider
+ * errors into partial reports, which are cached briefly instead of for 6h.
  */
 export async function cachedLookup(rawIp: string): Promise<CachedLookup> {
 	const ip = normalizeIp(rawIp);
@@ -93,10 +107,13 @@ export async function cachedLookup(rawIp: string): Promise<CachedLookup> {
 	}
 
 	const report = await computeReport(ip);
+	const ttl = cacheTtlSecondsForStatuses(
+		report.sources.map((source) => source.status),
+	);
 	await cache.put(
 		key,
 		Response.json(report, {
-			headers: { "cache-control": `public, max-age=${CACHE_TTL_SECONDS}` },
+			headers: { "cache-control": `public, max-age=${ttl}` },
 		}),
 	);
 	return { report, cache: "MISS" };

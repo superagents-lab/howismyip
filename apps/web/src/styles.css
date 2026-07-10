@@ -11,7 +11,7 @@
   --color-panel-2: #11161a;
   --color-border: #1d262b;
   --color-fg: #c8d3cf;
-  --color-muted: #6c7d77;
+  --color-muted: #72847e;
   --color-phosphor: #36f9a0; /* primary accent: terminal green */
   --color-phosphor-dim: #1f8f5e;
   --color-amber: #ffb454; /* warnings */
@@ -64,6 +64,10 @@ a {
 a:hover {
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+
+.brand-link:hover {
+  text-decoration: none;
 }
 
 /* Blinking block cursor for the prompt. */
