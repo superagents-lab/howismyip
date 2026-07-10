@@ -5,9 +5,9 @@
  * rate limiter stops one abusive caller, but distributed traffic can still
  * burn a whole day's upstream quota — this is the last line of defense. One
  * global DO counts calls per provider per UTC day; a provider whose budget
- * (`HOWISMYIP_PROVIDER_<ID>_DAILY_BUDGET`) is spent is skipped for the rest of
- * the day and reported as status "skipped", so the UI/API stay transparent
- * about what was and wasn't consulted.
+ * (set in the `HOWISMYIP_DAILY_BUDGETS` table, e.g. `proxycheck:900`) is spent
+ * is skipped for the rest of the day and reported as status "skipped", so the
+ * UI/API stay transparent about what was and wasn't consulted.
  *
  * Everything FAILS OPEN: no budgets configured, no binding (plain Node dev),
  * or any DO error → no skips, the lookup runs in full.

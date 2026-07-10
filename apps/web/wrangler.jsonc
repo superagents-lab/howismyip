@@ -15,8 +15,8 @@
       "simple": { "limit": 60, "period": 60 }
     }
   ],
-  // Per-provider daily quota counter; budgets come from
-  // HOWISMYIP_PROVIDER_<ID>_DAILY_BUDGET vars (no budget vars = counter idle).
+  // Per-provider daily quota counter; budgets come from the
+  // HOWISMYIP_DAILY_BUDGETS table (unset = counter idle).
   "durable_objects": {
     "bindings": [{ "name": "PROVIDER_QUOTA", "class_name": "ProviderQuota" }]
   },

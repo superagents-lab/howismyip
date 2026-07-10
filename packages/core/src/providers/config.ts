@@ -1,34 +1,26 @@
 import type { Env, IpProvider } from './types.js';
 
+/**
+ * The whole configuration surface is three variables (plus per-provider
+ * credentials): a disable list, a daily-budget table, and a shared timeout.
+ * Provider ids are used verbatim (e.g. `ip-api`, `ipapi-is`) — no name
+ * mangling to learn.
+ */
+export const DISABLED_PROVIDERS_ENV = 'HOWISMYIP_DISABLED_PROVIDERS';
+export const DAILY_BUDGETS_ENV = 'HOWISMYIP_DAILY_BUDGETS';
+
 const DEFAULT_PROVIDER_TIMEOUT_MS = 10_000;
 const MIN_PROVIDER_TIMEOUT_MS = 100;
 
-function envToken(id: string): string {
-  return id.toUpperCase().replace(/[^A-Z0-9]+/g, '_');
-}
-
-function enabledEnvName(id: string): string {
-  return `HOWISMYIP_PROVIDER_${envToken(id)}_ENABLED`;
-}
-
-function parseBool(value: string | undefined): boolean | null {
-  if (value === undefined || value.trim() === '') {
-    return null;
-  }
-  switch (value.trim().toLowerCase()) {
-    case '1':
-    case 'true':
-    case 'yes':
-    case 'on':
-      return true;
-    case '0':
-    case 'false':
-    case 'no':
-    case 'off':
-      return false;
-    default:
-      return null;
-  }
+/** Ids listed in `HOWISMYIP_DISABLED_PROVIDERS` (comma-separated). */
+function disabledProviderIds(env: Env): Set<string> {
+  const raw = env[DISABLED_PROVIDERS_ENV] ?? '';
+  return new Set(
+    raw
+      .split(',')
+      .map((id) => id.trim().toLowerCase())
+      .filter(Boolean)
+  );
 }
 
 function hasCredentials(provider: IpProvider, env: Env): boolean {
@@ -45,37 +37,36 @@ function hasCredentials(provider: IpProvider, env: Env): boolean {
   });
 }
 
-export function providerEnabledEnvName(provider: IpProvider): string {
-  return enabledEnvName(provider.id);
-}
-
-export function providerDailyBudgetEnvName(provider: IpProvider): string {
-  return `HOWISMYIP_PROVIDER_${envToken(provider.id)}_DAILY_BUDGET`;
-}
-
 /**
  * Optional per-provider daily call budget (UTC day), for hosted deployments
- * living on limited upstream plans. Unset/empty/invalid means unlimited.
- * `0` is valid and means "never call" while still listing the provider.
+ * living on limited upstream plans. Configured as one table:
+ * `HOWISMYIP_DAILY_BUDGETS=proxycheck:900,abuseipdb:900`. A provider not in
+ * the table (or with an invalid value) is unlimited; `0` is valid and means
+ * "never call" while still listing the provider.
  */
 export function providerDailyBudget(
   provider: IpProvider,
   env: Env
 ): number | null {
-  const raw = env[providerDailyBudgetEnvName(provider)];
+  const raw = env[DAILY_BUDGETS_ENV];
   if (raw === undefined || raw.trim() === '') {
     return null;
   }
-  const parsed = Number.parseInt(raw, 10);
-  if (!Number.isFinite(parsed) || parsed < 0) {
-    return null;
+  for (const entry of raw.split(',')) {
+    const [id, value] = entry.split(':');
+    if (id?.trim().toLowerCase() !== provider.id) {
+      continue;
+    }
+    const parsed = Number.parseInt(value ?? '', 10);
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
   }
-  return parsed;
+  return null;
 }
 
+/** Enabled unless listed in the disable list; keyed providers additionally
+ *  need all of their credentials present. */
 export function isProviderEnabled(provider: IpProvider, env: Env): boolean {
-  const enabled = parseBool(env[enabledEnvName(provider.id)]);
-  if (enabled === false) {
+  if (disabledProviderIds(env).has(provider.id)) {
     return false;
   }
   return hasCredentials(provider, env);

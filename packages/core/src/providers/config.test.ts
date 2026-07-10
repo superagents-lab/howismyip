@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
   isProviderEnabled,
-  providerEnabledEnvName,
+  providerDailyBudget,
   providerTimeoutMs,
 } from './config.js';
 import type { IpProvider } from './types.js';
@@ -26,37 +26,60 @@ const keyed: IpProvider = {
   lookup: () => Promise.resolve(null),
 };
 
-test('provider config derives stable enable env names', () => {
-  assert.equal(
-    providerEnabledEnvName(keyless),
-    'HOWISMYIP_PROVIDER_IP_API_ENABLED'
-  );
-});
-
-test('keyless providers are enabled by default and can be disabled', () => {
+test('keyless providers are enabled by default and can be disabled by list', () => {
   assert.equal(isProviderEnabled(keyless, {}), true);
   assert.equal(
-    isProviderEnabled(keyless, { HOWISMYIP_PROVIDER_IP_API_ENABLED: '0' }),
+    isProviderEnabled(keyless, { HOWISMYIP_DISABLED_PROVIDERS: 'ip-api' }),
+    false
+  );
+  // Tolerates spaces, mixed case, and other entries in the list.
+  assert.equal(
+    isProviderEnabled(keyless, {
+      HOWISMYIP_DISABLED_PROVIDERS: ' geojs, IP-API ,cymru',
+    }),
+    false
+  );
+  assert.equal(
+    isProviderEnabled(keyless, { HOWISMYIP_DISABLED_PROVIDERS: 'geojs' }),
+    true
+  );
+});
+
+test('keyed providers need credentials and honor the disable list', () => {
+  assert.equal(isProviderEnabled(keyed, {}), false);
+  const creds = {
+    MAXMIND_ACCOUNT_ID: 'account',
+    MAXMIND_LICENSE_KEY: 'license',
+  };
+  assert.equal(isProviderEnabled(keyed, creds), true);
+  assert.equal(
+    isProviderEnabled(keyed, {
+      ...creds,
+      HOWISMYIP_DISABLED_PROVIDERS: 'maxmind',
+    }),
     false
   );
 });
 
-test('keyed providers require both switch and credentials', () => {
-  assert.equal(isProviderEnabled(keyed, {}), false);
+test('daily budgets come from one table variable', () => {
+  assert.equal(providerDailyBudget(keyless, {}), null);
+  const env = {
+    HOWISMYIP_DAILY_BUDGETS: 'ip-api:900, maxmind:0',
+  };
+  assert.equal(providerDailyBudget(keyless, env), 900);
+  assert.equal(providerDailyBudget(keyed, env), 0); // 0 = never call
+  // Absent or malformed entries mean unlimited.
   assert.equal(
-    isProviderEnabled(keyed, {
-      MAXMIND_ACCOUNT_ID: 'account',
-      MAXMIND_LICENSE_KEY: 'license',
-    }),
-    true
+    providerDailyBudget(keyless, { HOWISMYIP_DAILY_BUDGETS: 'maxmind:5' }),
+    null
   );
   assert.equal(
-    isProviderEnabled(keyed, {
-      HOWISMYIP_PROVIDER_MAXMIND_ENABLED: 'false',
-      MAXMIND_ACCOUNT_ID: 'account',
-      MAXMIND_LICENSE_KEY: 'license',
-    }),
-    false
+    providerDailyBudget(keyless, { HOWISMYIP_DAILY_BUDGETS: 'ip-api:lots' }),
+    null
+  );
+  assert.equal(
+    providerDailyBudget(keyless, { HOWISMYIP_DAILY_BUDGETS: 'ip-api:-1' }),
+    null
   );
 });
 

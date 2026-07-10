@@ -13,10 +13,10 @@ export {
   reverseLabels,
 } from './ip.js';
 export {
+  DAILY_BUDGETS_ENV,
+  DISABLED_PROVIDERS_ENV,
   isProviderEnabled,
   providerDailyBudget,
-  providerDailyBudgetEnvName,
-  providerEnabledEnvName,
   providerTimeoutMs,
 } from './providers/config.js';
 export {

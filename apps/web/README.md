@@ -62,25 +62,16 @@ Common optional secrets:
 - `MAXMIND_ACCOUNT_ID`
 - `MAXMIND_LICENSE_KEY`
 
-Provider switches are shared across all sources. Empty means enabled; set a
-switch to `0`, `false`, `no`, or `off` to disable that provider:
+Three optional variables tune the runtime; provider ids are used verbatim
+(`ip-api`, `geojs`, `rdap`, `cymru`, `ip2location`, `ipapi-is`, `proxycheck`,
+`ipinfo`, `scamalytics`, `abuseipdb`, `ipqs`, `ipdata`, `maxmind`):
 
-- `HOWISMYIP_PROVIDER_IP_API_ENABLED`
-- `HOWISMYIP_PROVIDER_GEOJS_ENABLED`
-- `HOWISMYIP_PROVIDER_RDAP_ENABLED`
-- `HOWISMYIP_PROVIDER_CYMRU_ENABLED`
-- `HOWISMYIP_PROVIDER_IP2LOCATION_ENABLED`
-- `HOWISMYIP_PROVIDER_IPAPI_IS_ENABLED`
-- `HOWISMYIP_PROVIDER_PROXYCHECK_ENABLED`
-- `HOWISMYIP_PROVIDER_IPINFO_ENABLED`
-- `HOWISMYIP_PROVIDER_SCAMALYTICS_ENABLED`
-- `HOWISMYIP_PROVIDER_ABUSEIPDB_ENABLED`
-- `HOWISMYIP_PROVIDER_IPQS_ENABLED`
-- `HOWISMYIP_PROVIDER_IPDATA_ENABLED`
-- `HOWISMYIP_PROVIDER_MAXMIND_ENABLED`
-
-`HOWISMYIP_PROVIDER_TIMEOUT_MS` sets the shared per-provider timeout in
-milliseconds. The default is `10000`.
+- `HOWISMYIP_DISABLED_PROVIDERS` — comma-separated ids to turn off, e.g.
+  `geojs,ip2location`. Everything else stays enabled by default.
+- `HOWISMYIP_DAILY_BUDGETS` — per-provider daily call caps for hosted
+  deployments, e.g. `proxycheck:900,abuseipdb:900` (see the root README).
+- `HOWISMYIP_PROVIDER_TIMEOUT_MS` — shared per-provider timeout in
+  milliseconds. The default is `10000`.
 
 ## Deployment
 

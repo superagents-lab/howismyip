@@ -57,24 +57,20 @@ Notes:
 - The optional `MaxMind minFraud` provider uses MaxMind's official API and is
   treated as a risk source only when credentials are configured.
 
-Provider runtime is configured uniformly:
+Provider runtime is configured with three optional variables — the defaults
+just work (keyless sources on; keyed sources on whenever their credentials
+are present). Provider ids are used verbatim (`ip-api`, `ipapi-is`, …):
 
-- Every provider has a switch named
-  `HOWISMYIP_PROVIDER_<PROVIDER_ID>_ENABLED`. Empty means enabled; set it to
-  `0`, `false`, `no`, or `off` to disable that provider. Provider ids are
-  uppercased and non-alphanumeric characters become `_`, e.g.
-  `ip-api` -> `HOWISMYIP_PROVIDER_IP_API_ENABLED`.
-- Keyless providers load when their switch is enabled.
-- Keyed providers load only when their switch is enabled **and** all required
-  credentials are present.
-- `HOWISMYIP_PROVIDER_TIMEOUT_MS` sets the shared per-provider timeout. The
-  default is `10000`.
-- `HOWISMYIP_PROVIDER_<PROVIDER_ID>_DAILY_BUDGET` (optional) caps how many
-  upstream calls a provider may make per UTC day — for hosted deployments
-  running providers on limited free plans. Once spent, the provider is
-  reported as status `skipped` (shown as "daily quota exhausted" in the UI)
-  until the next day. Enforced by a Durable Object on the Cloudflare
-  deployment; ignored elsewhere. Unset means unlimited.
+- `HOWISMYIP_DISABLED_PROVIDERS` — comma-separated ids to turn off, e.g.
+  `geojs,ip2location`.
+- `HOWISMYIP_DAILY_BUDGETS` — daily call caps per provider (UTC day) for
+  hosted deployments running providers on limited free plans, e.g.
+  `proxycheck:900,abuseipdb:900` (`0` = never call). A provider whose budget
+  is spent is reported as status `skipped` (shown as "daily quota exhausted"
+  in the UI) until the next day. Enforced by a Durable Object on the
+  Cloudflare deployment; ignored elsewhere.
+- `HOWISMYIP_PROVIDER_TIMEOUT_MS` — shared per-provider timeout. The default
+  is `10000`.
 
 ### Abuse protection (hosted deployments)
 

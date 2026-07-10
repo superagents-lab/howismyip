@@ -99,10 +99,8 @@ describe("ProviderQuota", () => {
 });
 
 describe("quotaExhaustedProviders", () => {
-	const BUDGET_VAR = "HOWISMYIP_PROVIDER_GEOJS_DAILY_BUDGET";
-
 	afterEach(() => {
-		delete process.env[BUDGET_VAR];
+		delete process.env.HOWISMYIP_DAILY_BUDGETS;
 	});
 
 	it("returns no skips when no provider has a budget", async () => {
@@ -110,7 +108,8 @@ describe("quotaExhaustedProviders", () => {
 	});
 
 	it("fails open outside the Workers runtime even with budgets set", async () => {
-		process.env[BUDGET_VAR] = "0"; // strictest budget: would skip if enforced
+		// Strictest possible budget: would skip geojs if it were enforced here.
+		process.env.HOWISMYIP_DAILY_BUDGETS = "geojs:0";
 		expect(await quotaExhaustedProviders()).toEqual(new Set());
 	});
 });
