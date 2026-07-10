@@ -16,6 +16,7 @@ export const ipqsProvider: IpProvider = {
   category: 'risk',
   requiresKey: true,
   credentialEnv: ['IPQS_API_KEY'],
+  billingPeriod: 'month', // IPQS meters on a monthly quota, not daily
   sourceUrl: (ip) =>
     `https://www.ipqualityscore.com/free-ip-lookup-proxy-vpn-test/lookup/${encodeURIComponent(ip)}`,
   async lookup(ip, env, context) {

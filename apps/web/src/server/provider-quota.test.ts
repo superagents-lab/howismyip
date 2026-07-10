@@ -50,12 +50,18 @@ function makeQuota() {
 
 async function consume(
 	quota: ProviderQuota,
-	entries: Array<{ id: string; budget: number }>,
+	entries: Array<{
+		id: string;
+		budget: number;
+		period?: "day" | "month" | "lifetime";
+	}>,
 ): Promise<string[]> {
 	const res = await quota.fetch(
 		new Request("https://provider-quota/consume", {
 			method: "POST",
-			body: JSON.stringify({ entries }),
+			body: JSON.stringify({
+				entries: entries.map((e) => ({ period: "day", ...e })),
+			}),
 		}),
 	);
 	const { exhausted } = (await res.json()) as { exhausted: string[] };
@@ -87,14 +93,75 @@ describe("ProviderQuota", () => {
 		expect(await consume(quota, [{ id: "p", budget: 0 }])).toEqual(["p"]);
 	});
 
-	it("resets counts when the UTC day changes", async () => {
+	it("raising the budget unlocks capacity immediately, even mid-period", async () => {
+		const { quota } = makeQuota();
+		expect(await consume(quota, [{ id: "p", budget: 0 }])).toEqual(["p"]);
+		expect(await consume(quota, [{ id: "p", budget: 1 }])).toEqual([]);
+	});
+
+	describe("'day' period (default)", () => {
+		it("resets when the stored bucket is an earlier UTC day", async () => {
+			const { quota, storage } = makeQuota();
+			expect(await consume(quota, [{ id: "p", budget: 1 }])).toEqual([]);
+			expect(await consume(quota, [{ id: "p", budget: 1 }])).toEqual(["p"]);
+			// Pretend the stored count is from yesterday.
+			storage.map.set("period:p", "1999-01-01");
+			expect(await consume(quota, [{ id: "p", budget: 1 }])).toEqual([]);
+			expect(storage.map.get("period:p")).toBe(
+				new Date().toISOString().slice(0, 10),
+			);
+		});
+	});
+
+	describe("'month' period", () => {
+		it("does NOT reset day-to-day within the same UTC month", async () => {
+			const { quota } = makeQuota();
+			// Two calls on the same real day both fall in the current UTC month,
+			// so the second one exhausts a budget of 1 — no per-day reset.
+			expect(
+				await consume(quota, [{ id: "p", budget: 1, period: "month" }]),
+			).toEqual([]);
+			expect(
+				await consume(quota, [{ id: "p", budget: 1, period: "month" }]),
+			).toEqual(["p"]);
+		});
+
+		it("resets only when the UTC month changes", async () => {
+			const { quota, storage } = makeQuota();
+			storage.map.set("count:p", 1);
+			storage.map.set("period:p", "2026-06"); // last month, budget already spent
+			expect(
+				await consume(quota, [{ id: "p", budget: 1, period: "month" }]),
+			).toEqual([]);
+			expect(storage.map.get("period:p")).toBe(
+				new Date().toISOString().slice(0, 7),
+			);
+		});
+	});
+
+	describe("'lifetime' period", () => {
+		it("never resets — exhaustion is permanent until the budget is raised", async () => {
+			const { quota, storage } = makeQuota();
+			expect(
+				await consume(quota, [{ id: "p", budget: 1, period: "lifetime" }]),
+			).toEqual([]);
+			expect(
+				await consume(quota, [{ id: "p", budget: 1, period: "lifetime" }]),
+			).toEqual(["p"]);
+			// Even simulating a much later date doesn't reset it.
+			storage.map.set("period:p", "lifetime");
+			expect(
+				await consume(quota, [{ id: "p", budget: 1, period: "lifetime" }]),
+			).toEqual(["p"]);
+		});
+	});
+
+	it("treats pre-existing counts with no stored period as a fresh bucket (migration)", async () => {
 		const { quota, storage } = makeQuota();
+		// Shape written by the old single-"day"-marker scheme: a count with no
+		// per-provider period marker at all.
+		storage.map.set("count:p", 5);
 		expect(await consume(quota, [{ id: "p", budget: 1 }])).toEqual([]);
-		expect(await consume(quota, [{ id: "p", budget: 1 }])).toEqual(["p"]);
-		// Pretend the stored counts are from yesterday.
-		storage.map.set("day", "1999-01-01");
-		expect(await consume(quota, [{ id: "p", budget: 1 }])).toEqual([]);
-		expect(storage.map.get("day")).toBe(new Date().toISOString().slice(0, 10));
 	});
 });
 

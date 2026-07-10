@@ -68,8 +68,10 @@ Three optional variables tune the runtime; provider ids are used verbatim
 
 - `HOWISMYIP_DISABLED_PROVIDERS` — comma-separated ids to turn off, e.g.
   `geojs,ip2location`. Everything else stays enabled by default.
-- `HOWISMYIP_DAILY_BUDGETS` — per-provider daily call caps for hosted
-  deployments, e.g. `proxycheck:900,abuseipdb:900` (see the root README).
+- `HOWISMYIP_DAILY_BUDGETS` — per-provider call caps for hosted deployments,
+  e.g. `proxycheck:900,ipqs:900`. Each provider resets on its own real
+  billing cycle (day/month/prepaid lifetime), not always daily — see the
+  root README.
 - `HOWISMYIP_PROVIDER_TIMEOUT_MS` — shared per-provider timeout in
   milliseconds. The default is `10000`.
 

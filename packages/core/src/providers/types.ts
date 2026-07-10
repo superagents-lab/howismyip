@@ -27,6 +27,14 @@ export interface IpProvider {
   requiresKey: boolean;
   /** Environment variables that must be present when `requiresKey` is true. */
   credentialEnv?: string[];
+  /**
+   * Real-world billing cycle this provider's `HOWISMYIP_DAILY_BUDGETS` number
+   * is measured against. `'day'` (default) and `'month'` reset on UTC calendar
+   * boundaries. `'lifetime'` never resets — for prepaid/pay-as-you-go balances
+   * (e.g. MaxMind): raise the configured number after a manual top-up instead
+   * of waiting for a reset that will never come.
+   */
+  billingPeriod?: 'day' | 'month' | 'lifetime';
   /** Link to the provider's own page for this IP (for "view at source"). */
   sourceUrl(ip: string): string;
   /**

@@ -21,6 +21,7 @@ export const scamalyticsProvider: IpProvider = {
   category: 'risk',
   requiresKey: true,
   credentialEnv: ['SCAMALYTICS_API_URL', 'SCAMALYTICS_API_KEY'],
+  billingPeriod: 'month', // Scamalytics plans meter on a monthly quota
   sourceUrl: (ip) => `https://scamalytics.com/ip/${encodeURIComponent(ip)}`,
   async lookup(ip, env, context) {
     const url = new URL(env.SCAMALYTICS_API_URL ?? '');

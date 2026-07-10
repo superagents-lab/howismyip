@@ -11,6 +11,7 @@ export const ipinfoProvider: IpProvider = {
   category: 'network',
   requiresKey: true,
   credentialEnv: ['IPINFO_TOKEN'],
+  billingPeriod: 'month', // IPinfo Lite's free tier meters on a monthly quota
   sourceUrl: (ip) => `https://ipinfo.io/${encodeURIComponent(ip)}`,
   async lookup(ip, env, context) {
     const token = env.IPINFO_TOKEN ?? '';

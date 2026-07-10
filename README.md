@@ -63,12 +63,16 @@ are present). Provider ids are used verbatim (`ip-api`, `ipapi-is`, …):
 
 - `HOWISMYIP_DISABLED_PROVIDERS` — comma-separated ids to turn off, e.g.
   `geojs,ip2location`.
-- `HOWISMYIP_DAILY_BUDGETS` — daily call caps per provider (UTC day) for
-  hosted deployments running providers on limited free plans, e.g.
-  `proxycheck:900,abuseipdb:900` (`0` = never call). A provider whose budget
-  is spent is reported as status `skipped` (shown as "daily quota exhausted"
-  in the UI) until the next day. Enforced by a Durable Object on the
-  Cloudflare deployment; ignored elsewhere.
+- `HOWISMYIP_DAILY_BUDGETS` — call caps per provider for hosted deployments
+  running providers on limited plans, e.g. `proxycheck:900,ipqs:900` (`0` =
+  never call). Each provider resets on **its own** real billing cycle, not
+  always daily: most reset per UTC day; a few (IPQualityScore, Scamalytics,
+  IPinfo Lite) meter monthly and reset per UTC calendar month instead; MaxMind
+  is a prepaid balance that never resets on its own — raise its number
+  yourself after a manual top-up. A provider whose budget is spent for its
+  current period is reported as status `skipped` (shown as "quota exhausted"
+  in the UI) until the reset. Enforced by a Durable Object on the Cloudflare
+  deployment; ignored elsewhere.
 - `HOWISMYIP_PROVIDER_TIMEOUT_MS` — shared per-provider timeout. The default
   is `10000`.
 

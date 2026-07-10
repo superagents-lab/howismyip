@@ -169,6 +169,9 @@ export const maxmindProvider: IpProvider = {
   category: 'risk',
   requiresKey: true,
   credentialEnv: ['MAXMIND_ACCOUNT_ID', 'MAXMIND_LICENSE_KEY'],
+  // Pay-as-you-go prepaid balance — it never refills on its own. Raise the
+  // configured budget after a manual top-up instead of waiting for a reset.
+  billingPeriod: 'lifetime',
   sourceUrl: () => 'https://dev.maxmind.com/minfraud/',
   async lookup(ip, env, context) {
     const accountId = env.MAXMIND_ACCOUNT_ID ?? '';
