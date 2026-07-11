@@ -2,7 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Banner } from "../../components/banner";
 import { IpSearch, QueryLoader } from "../../components/ip-search";
 import { ReportView } from "../../components/report-view";
+import { getDictionary, isLocale } from "../../i18n/messages";
 import { useT } from "../../i18n/use-t";
+import { buildSocialMeta, SITE_ORIGIN } from "../../lib/social-meta";
 import { lookupIpFn } from "../../server/lookup";
 
 export const Route = createFileRoute("/$lang/$ip")({
@@ -11,9 +13,22 @@ export const Route = createFileRoute("/$lang/$ip")({
 	pendingComponent: IpPending,
 	pendingMs: 0,
 	pendingMinMs: 350,
-	head: ({ params }) => ({
-		meta: [{ title: `${params.ip} · howismyip` }],
-	}),
+	head: ({ params }) => {
+		const locale = isLocale(params.lang) ? params.lang : "en";
+		const dict = getDictionary(locale);
+		const title = `${params.ip} · howismyip`;
+		const url = `${SITE_ORIGIN}/${locale}/${params.ip}`;
+		return {
+			meta: buildSocialMeta({
+				title,
+				description: dict.meta.ipDescription(params.ip),
+				url,
+				imageAlt: dict.meta.imageAlt,
+				locale,
+			}),
+			links: [{ rel: "canonical", href: url }],
+		};
+	},
 });
 
 function IpDetail() {

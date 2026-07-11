@@ -4,18 +4,25 @@ import { IpSearch } from "../../components/ip-search";
 import { getDictionary, isLocale } from "../../i18n/messages";
 import { useT } from "../../i18n/use-t";
 import { categoryColor } from "../../lib/format";
+import { buildSocialMeta, SITE_ORIGIN } from "../../lib/social-meta";
 import { listProvidersFn } from "../../server/lookup";
 
 export const Route = createFileRoute("/$lang/")({
 	loader: () => listProvidersFn(),
 	component: Home,
 	head: ({ params }) => {
-		const dict = getDictionary(isLocale(params.lang) ? params.lang : "en");
+		const locale = isLocale(params.lang) ? params.lang : "en";
+		const dict = getDictionary(locale);
+		const url = `${SITE_ORIGIN}/${locale}`;
 		return {
-			meta: [
-				{ title: dict.meta.title },
-				{ name: "description", content: dict.meta.description },
-			],
+			meta: buildSocialMeta({
+				title: dict.meta.title,
+				description: dict.meta.description,
+				url,
+				imageAlt: dict.meta.imageAlt,
+				locale,
+			}),
+			links: [{ rel: "canonical", href: url }],
 		};
 	},
 });

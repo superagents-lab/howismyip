@@ -14,7 +14,10 @@ const en = {
 	meta: {
 		title: "howismyip · multi-source IP intelligence",
 		description:
-			"Check an IP against many reputation, geolocation, ASN, registry and blocklist sources at once. Keyless by default, open source, agent-ready.",
+			"Look up any IPv4 or IPv6 address across geolocation, ASN, registry, and IP reputation sources in one clear report.",
+		imageAlt: "howismyip multi-source IP intelligence report preview",
+		ipDescription: (ip: string) =>
+			`View a multi-source IP intelligence report for ${ip}, including location, ASN, network, and risk signals.`,
 	},
 	tagline: "Know the whole IP.",
 	search: {
@@ -140,7 +143,10 @@ const zh: Dictionary = {
 	meta: {
 		title: "howismyip · 多源 IP 情报",
 		description:
-			"一次查询，跨多个信誉、地理、ASN、注册局与黑名单数据源同时检测一个 IP。无 key 开箱即用，开源，agent 友好。",
+			"一次查询 IPv4 或 IPv6 地址，汇总地理位置、ASN、注册局与 IP 信誉信息，清晰呈现 IP 全貌。",
+		imageAlt: "howismyip 多源 IP 情报报告预览",
+		ipDescription: (ip: string) =>
+			`查看 ${ip} 的多源 IP 情报报告，包括位置、ASN、网络与风险信号。`,
 	},
 	tagline: "看清 IP 全貌。",
 	search: {
