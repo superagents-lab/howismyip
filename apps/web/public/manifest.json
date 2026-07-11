@@ -3,23 +3,23 @@
   "name": "howismyip · Know the whole IP",
   "icons": [
     {
-      "src": "icon.svg",
+      "src": "icon.svg?v=20260711",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
     },
     {
-      "src": "favicon.ico",
+      "src": "favicon.ico?v=20260711",
       "sizes": "64x64",
       "type": "image/x-icon"
     },
     {
-      "src": "logo192.png",
+      "src": "logo192.png?v=20260711",
       "type": "image/png",
       "sizes": "192x192"
     },
     {
-      "src": "logo512.png",
+      "src": "logo512.png?v=20260711",
       "type": "image/png",
       "sizes": "512x512"
     }

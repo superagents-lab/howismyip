@@ -41,7 +41,7 @@ export function Banner() {
 				className="brand-link flex min-w-0 items-center gap-2 no-underline"
 			>
 				<img
-					src="/icon.svg"
+					src="/icon.svg?v=20260711"
 					alt=""
 					width={32}
 					height={32}
