@@ -81,10 +81,10 @@ export function IpSearch({ initial = "" }: { initial?: string }) {
 		<div className="space-y-2">
 			<form
 				onSubmit={submit}
-				className={`flex flex-wrap items-stretch gap-2 ${busy ? "query-busy" : ""}`}
+				className={`grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-stretch ${busy ? "query-busy" : ""}`}
 			>
 				<div
-					className={`flex min-w-[260px] flex-1 items-center gap-2 border bg-panel px-3 py-2 focus-within:border-phosphor-dim ${
+					className={`col-span-2 flex min-h-11 w-full items-center gap-2 border bg-panel px-3 py-2 focus-within:border-phosphor-dim sm:min-h-0 sm:min-w-[260px] sm:flex-1 ${
 						busy
 							? "border-phosphor-dim shadow-[0_0_0_1px_#1f8f5e]"
 							: "border-border"
@@ -109,7 +109,7 @@ export function IpSearch({ initial = "" }: { initial?: string }) {
 				<button
 					type="submit"
 					disabled={busy || !value.trim()}
-					className="border border-phosphor-dim bg-panel px-4 py-2 text-phosphor hover:bg-phosphor hover:text-bg disabled:cursor-not-allowed disabled:border-border disabled:text-muted disabled:opacity-60 disabled:hover:bg-panel disabled:hover:text-muted"
+					className="min-h-11 w-full whitespace-nowrap border border-phosphor-dim bg-panel px-3 py-2 text-phosphor hover:bg-phosphor hover:text-bg disabled:cursor-not-allowed disabled:border-border disabled:text-muted disabled:opacity-60 disabled:hover:bg-panel disabled:hover:text-muted sm:min-h-0 sm:w-auto sm:px-4"
 				>
 					{searching ? t.search.searching : t.search.run}
 				</button>
@@ -117,7 +117,7 @@ export function IpSearch({ initial = "" }: { initial?: string }) {
 					type="button"
 					onClick={scanSelf}
 					disabled={busy}
-					className="border border-border bg-panel px-4 py-2 text-muted hover:border-phosphor-dim hover:text-fg disabled:cursor-not-allowed disabled:opacity-60"
+					className="min-h-11 w-full whitespace-nowrap border border-border bg-panel px-3 py-2 text-muted hover:border-phosphor-dim hover:text-fg disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-0 sm:w-auto sm:px-4"
 				>
 					{scanning ? t.search.scanning : t.search.scan}
 				</button>
