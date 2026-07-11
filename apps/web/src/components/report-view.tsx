@@ -106,18 +106,6 @@ export function ReportView({ report }: { report: IpReport }) {
 	const highRiskCount = observedRiskLevels.filter(
 		(level) => level === "high",
 	).length;
-	const failedSources = report.sources.filter(
-		(source) => source.status === "error",
-	);
-	const sourceIssues = failedSources
-		.map((source) => {
-			const reason = source.error?.toLowerCase().includes("timeout")
-				? t.report.timedOut
-				: t.report.failed;
-			return `${source.name} — ${reason}`;
-		})
-		.join(" · ");
-
 	return (
 		<div className="space-y-5">
 			<div className="border border-border bg-panel">
@@ -157,12 +145,6 @@ export function ReportView({ report }: { report: IpReport }) {
 					{JSON.stringify(report, null, 2)}
 				</pre>
 			)}
-
-			{sourceIssues ? (
-				<div className="text-amber text-xs">
-					{t.report.sourceIssues(sourceIssues)}
-				</div>
-			) : null}
 
 			{riskSources.length > 0 && (
 				<section>
