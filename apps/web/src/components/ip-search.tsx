@@ -30,6 +30,13 @@ export function IpSearch({ initial = "" }: { initial?: string }) {
 	const t = useT();
 	const lang = useLocale();
 	const [value, setValue] = useState(initial);
+	// The /:lang/:ip route reuses this instance across param changes (no
+	// remount), so re-sync the prompt whenever the routed IP changes.
+	const [prevInitial, setPrevInitial] = useState(initial);
+	if (initial !== prevInitial) {
+		setPrevInitial(initial);
+		setValue(initial);
+	}
 	const [searching, setSearching] = useState(false);
 	const [scanning, setScanning] = useState(false);
 	const [note, setNote] = useState<string | null>(null);
