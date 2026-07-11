@@ -20,6 +20,13 @@ const en = {
 			`View a multi-source IP intelligence report for ${ip}, including location, ASN, network, and risk signals.`,
 	},
 	tagline: "Know the whole IP.",
+	themeToggle: "Switch theme",
+	theme: {
+		light: "Light",
+		dark: "Dark",
+		system: "System",
+	},
+	langToggle: "Switch language",
 	search: {
 		prefix: "whois",
 		inputLabel: "IP address",
@@ -149,6 +156,13 @@ const zh: Dictionary = {
 			`查看 ${ip} 的多源 IP 情报报告，包括位置、ASN、网络与风险信号。`,
 	},
 	tagline: "看清 IP 全貌。",
+	themeToggle: "切换主题",
+	theme: {
+		light: "浅色",
+		dark: "深色",
+		system: "跟随系统",
+	},
+	langToggle: "切换语言",
 	search: {
 		prefix: "whois",
 		inputLabel: "IP 地址",

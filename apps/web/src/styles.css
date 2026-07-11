@@ -1,7 +1,10 @@
 @import "tailwindcss";
 
 /* ── howismyip terminal theme ─────────────────────────────────────────────
-   Phosphor-on-black, monospace everywhere, a faint CRT scanline wash. */
+   Phosphor-on-black, monospace everywhere, a faint CRT scanline wash.
+   Dark is the default; `data-theme="light"` on <html> swaps the palette
+   to phosphor-on-paper (set before paint by the inline script in the
+   document head, persisted in localStorage). */
 @theme {
   --font-mono: "JetBrains Mono", "IBM Plex Mono", "SFMono-Regular", ui-monospace,
     "Menlo", "Consolas", monospace;
@@ -17,6 +20,28 @@
   --color-amber: #ffb454; /* warnings */
   --color-danger: #ff5d62; /* high risk */
   --color-cyan: #56c8d8; /* network/registry accents */
+}
+
+:root {
+  color-scheme: dark;
+  --scanline: rgba(0, 0, 0, 0.22);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --scanline: rgba(16, 35, 27, 0.05);
+
+  --color-bg: #f1f4f2;
+  --color-panel: #fafcfa;
+  --color-panel-2: #e9eeeb;
+  --color-border: #ccd7d1;
+  --color-fg: #22302a;
+  --color-muted: #5b6d66;
+  --color-phosphor: #0b7d4f;
+  --color-phosphor-dim: #4da983;
+  --color-amber: #9d6300;
+  --color-danger: #c1333a;
+  --color-cyan: #0d7f93;
 }
 
 * {
@@ -48,10 +73,10 @@ body::before {
   z-index: 9999;
   background: repeating-linear-gradient(
     to bottom,
-    rgba(0, 0, 0, 0) 0px,
-    rgba(0, 0, 0, 0) 2px,
-    rgba(0, 0, 0, 0.22) 3px,
-    rgba(0, 0, 0, 0) 4px
+    transparent 0px,
+    transparent 2px,
+    var(--scanline) 3px,
+    transparent 4px
   );
   mix-blend-mode: multiply;
   opacity: 0.5;
@@ -92,13 +117,13 @@ a:hover {
   0%,
   100% {
     box-shadow:
-      0 0 0 1px rgba(31, 143, 94, 0.45),
-      0 0 14px rgba(54, 249, 160, 0.08);
+      0 0 0 1px color-mix(in srgb, var(--color-phosphor-dim) 45%, transparent),
+      0 0 14px color-mix(in srgb, var(--color-phosphor) 8%, transparent);
   }
   50% {
     box-shadow:
-      0 0 0 1px rgba(54, 249, 160, 0.95),
-      0 0 24px rgba(54, 249, 160, 0.22);
+      0 0 0 1px color-mix(in srgb, var(--color-phosphor) 95%, transparent),
+      0 0 24px color-mix(in srgb, var(--color-phosphor) 22%, transparent);
   }
 }
 
@@ -131,7 +156,8 @@ a:hover {
 .query-loader {
   position: relative;
   overflow: hidden;
-  box-shadow: inset 0 0 20px rgba(54, 249, 160, 0.06);
+  box-shadow: inset 0 0 20px
+    color-mix(in srgb, var(--color-phosphor) 6%, transparent);
 }
 
 .query-loader::before {
@@ -141,8 +167,8 @@ a:hover {
   pointer-events: none;
   background: repeating-linear-gradient(
     90deg,
-    rgba(54, 249, 160, 0.1) 0,
-    rgba(54, 249, 160, 0.1) 1px,
+    color-mix(in srgb, var(--color-phosphor) 10%, transparent) 0,
+    color-mix(in srgb, var(--color-phosphor) 10%, transparent) 1px,
     transparent 1px,
     transparent 10px
   );
@@ -153,7 +179,7 @@ a:hover {
   height: 6px;
   overflow: hidden;
   border: 1px solid var(--color-border);
-  background: rgba(7, 9, 10, 0.8);
+  background: color-mix(in srgb, var(--color-bg) 80%, transparent);
 }
 
 .query-loader-bar {
@@ -162,9 +188,9 @@ a:hover {
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(54, 249, 160, 0.4) 20%,
+    color-mix(in srgb, var(--color-phosphor) 40%, transparent) 20%,
     var(--color-phosphor) 52%,
-    rgba(86, 200, 216, 0.7) 76%,
+    color-mix(in srgb, var(--color-cyan) 70%, transparent) 76%,
     transparent 100%
   );
   animation: query-sweep 0.95s linear infinite;
@@ -184,4 +210,11 @@ a:hover {
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--color-border) transparent;
+}
+
+/* Theme toggle: which glyph shows is driven purely by the <html> data-theme
+   attribute, so SSR markup never depends on the client-side choice. */
+[data-theme="light"] .theme-icon-sun,
+:root:not([data-theme="light"]) .theme-icon-moon {
+  display: none;
 }

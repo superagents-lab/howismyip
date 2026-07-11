@@ -86,7 +86,7 @@ export function IpSearch({ initial = "" }: { initial?: string }) {
 				<div
 					className={`col-span-2 flex min-h-11 w-full items-center gap-2 border bg-panel px-3 py-2 focus-within:border-phosphor-dim sm:min-h-0 sm:min-w-[260px] sm:flex-1 ${
 						busy
-							? "border-phosphor-dim shadow-[0_0_0_1px_#1f8f5e]"
+							? "border-phosphor-dim shadow-[0_0_0_1px_var(--color-phosphor-dim)]"
 							: "border-border"
 					}`}
 				>

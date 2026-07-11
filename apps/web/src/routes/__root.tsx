@@ -46,10 +46,17 @@ export const Route = createRootRoute({
 	shellComponent: RootDocument,
 });
 
+// Runs before first paint so the resolved theme never flashes.
+// Explicit user choice (localStorage) wins; otherwise follow the OS
+// preference via prefers-color-scheme.
+const themeInitScript = `var t=null;try{t=localStorage.getItem("howismyip-theme")}catch(e){}if(t!=="light"&&t!=="dark")t=matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";document.documentElement.dataset.theme=t;`;
+
 function RootDocument({ children }: { children: React.ReactNode }) {
 	return (
-		<html lang="en">
+		<html lang="en" suppressHydrationWarning>
 			<head>
+				{/* biome-ignore lint/security/noDangerouslySetInnerHtml: static theme bootstrap, no user input */}
+				<script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
 				<HeadContent />
 			</head>
 			<body>
