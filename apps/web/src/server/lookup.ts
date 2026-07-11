@@ -56,8 +56,14 @@ export interface SelfLookup {
 }
 
 /** Our egress IP via a public echo service — the fallback when request headers
- *  don't carry a usable public IP (local dev, missing proxy headers). */
+ *  don't carry a usable public IP. Dev-only: it reports the *server's* IP,
+ *  which equals the caller's only when both are the same machine (local dev).
+ *  In production it would silently show the Worker's egress IP to every
+ *  visitor, so there we fail the lookup instead. */
 export async function fetchEgressIp(): Promise<string | null> {
+	if (!import.meta.env.DEV) {
+		return null;
+	}
 	try {
 		const res = await fetch("https://api.ipify.org?format=json");
 		if (!res.ok) {
@@ -71,8 +77,8 @@ export async function fetchEgressIp(): Promise<string | null> {
 }
 
 /** Server function for "scan my own IP" — resolves the caller's public IP.
- *  Prefers proxy/request headers; falls back to egress detection (ipify) so it
- *  still returns a real public IP in local dev where headers give only ::1. */
+ *  Prefers proxy/request headers; in local dev (where headers give only ::1)
+ *  falls back to egress detection, which is a no-op in production. */
 export const lookupSelfFn = createServerFn({ method: "GET" }).handler(
 	async (): Promise<SelfLookup> => {
 		if (await isRateLimited()) {
