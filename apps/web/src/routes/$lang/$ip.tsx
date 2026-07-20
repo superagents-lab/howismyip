@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { Banner } from "../../components/banner";
 import { IpSearch, QueryLoader } from "../../components/ip-search";
 import { ProductCredit } from "../../components/product-credit";
@@ -6,14 +7,10 @@ import { ReportView } from "../../components/report-view";
 import { getDictionary, isLocale } from "../../i18n/messages";
 import { useT } from "../../i18n/use-t";
 import { buildSocialMeta, SITE_ORIGIN } from "../../lib/social-meta";
-import { lookupIpFn } from "../../server/lookup";
+import { type LookupResult, lookupIpFn } from "../../server/lookup";
 
 export const Route = createFileRoute("/$lang/$ip")({
-	loader: ({ params }) => lookupIpFn({ data: params.ip }),
-	component: IpDetail,
-	pendingComponent: IpPending,
-	pendingMs: 0,
-	pendingMinMs: 350,
+	component: IpPage,
 	head: ({ params }) => {
 		const locale = isLocale(params.lang) ? params.lang : "en";
 		const dict = getDictionary(locale);
@@ -32,8 +29,49 @@ export const Route = createFileRoute("/$lang/$ip")({
 	},
 });
 
-function IpDetail() {
-	const { report, errorCode } = Route.useLoaderData();
+interface LookupState {
+	ip: string;
+	result?: LookupResult;
+}
+
+function IpPage() {
+	const { ip } = Route.useParams();
+	const [lookup, setLookup] = useState<LookupState>(() => ({ ip }));
+
+	useEffect(() => {
+		let active = true;
+		setLookup({ ip });
+
+		lookupIpFn({ data: ip }).then(
+			(result) => {
+				if (active) {
+					setLookup({ ip, result });
+				}
+			},
+			() => {
+				if (active) {
+					setLookup({
+						ip,
+						result: { report: null, errorCode: "failed" },
+					});
+				}
+			},
+		);
+
+		return () => {
+			active = false;
+		};
+	}, [ip]);
+
+	if (lookup.ip !== ip || !lookup.result) {
+		return <IpPending />;
+	}
+
+	return <IpDetail result={lookup.result} />;
+}
+
+function IpDetail({ result }: { result: LookupResult }) {
+	const { report, errorCode } = result;
 	const { ip } = Route.useParams();
 	const t = useT();
 	const errorText =
