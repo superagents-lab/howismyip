@@ -43,6 +43,14 @@ const en = {
 	home: {
 		sourcesLabel: "Data sources",
 	},
+	relatedProduct: {
+		label: "Related service",
+		providedBy: "Provided by",
+		title: "Static ISP, you choose who to trust",
+		description:
+			"Filter zero-fraud-score IPs by the intelligence provider you trust.",
+		cta: "Learn more",
+	},
 	report: {
 		onBlocklists: "on blocklists:",
 		copyCurl: "copy curl",
@@ -172,6 +180,13 @@ const zh: Dictionary = {
 	},
 	home: {
 		sourcesLabel: "数据源",
+	},
+	relatedProduct: {
+		label: "相关服务",
+		providedBy: "Provided by",
+		title: "静态 ISP，由你决定相信谁",
+		description: "按你信任的检测机构筛选 0 欺诈分 IP。",
+		cta: "了解更多",
 	},
 	report: {
 		onBlocklists: "命中黑名单：",

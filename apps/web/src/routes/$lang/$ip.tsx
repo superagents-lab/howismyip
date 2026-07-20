@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Banner } from "../../components/banner";
 import { IpSearch, QueryLoader } from "../../components/ip-search";
+import { ProductCredit } from "../../components/product-credit";
 import { ReportView } from "../../components/report-view";
 import { getDictionary, isLocale } from "../../i18n/messages";
 import { useT } from "../../i18n/use-t";
@@ -55,7 +56,12 @@ function IpDetail() {
 					! {errorText}
 				</div>
 			)}
-			{report && <ReportView report={report} />}
+			{report && (
+				<>
+					<ReportView report={report} />
+					<ProductCredit />
+				</>
+			)}
 		</main>
 	);
 }

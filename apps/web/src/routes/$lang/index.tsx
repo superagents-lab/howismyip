@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Banner } from "../../components/banner";
 import { IpSearch } from "../../components/ip-search";
+import { ProductCredit } from "../../components/product-credit";
 import { getDictionary, isLocale } from "../../i18n/messages";
 import { useT } from "../../i18n/use-t";
 import { categoryColor } from "../../lib/format";
@@ -63,6 +64,8 @@ function Home() {
 					))}
 				</ul>
 			</section>
+
+			<ProductCredit />
 		</main>
 	);
 }

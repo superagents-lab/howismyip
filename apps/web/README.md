@@ -50,6 +50,12 @@ cp .env.example .env
 The local dev server reads `.env` from this directory. The CLI does not read
 this file; use shell environment variables for CLI lookups.
 
+To enable Google Analytics 4 in production, set
+`VITE_GA_MEASUREMENT_ID=G-...`. This is a public, build-time value rather than
+a Worker secret. Local/manual builds read it from `.env`; for Cloudflare
+Workers Builds, add it as a build variable. The app does not load Google's
+script in development or when this value is absent.
+
 Common optional secrets:
 
 - `PROXYCHECK_API_KEY`

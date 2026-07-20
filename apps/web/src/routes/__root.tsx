@@ -2,6 +2,7 @@ import { TanStackDevtools } from "@tanstack/react-devtools";
 import { createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 
+import { GoogleAnalytics } from "../components/google-analytics";
 import appCss from "../styles.css?url";
 
 export const Route = createRootRoute({
@@ -61,6 +62,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 			</head>
 			<body>
 				{children}
+				<GoogleAnalytics />
 				<TanStackDevtools
 					config={{
 						position: "bottom-right",
