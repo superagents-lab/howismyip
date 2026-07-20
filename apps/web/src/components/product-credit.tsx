@@ -39,7 +39,7 @@ export function ProductCredit() {
 				<a
 					href={destination}
 					target="_blank"
-					rel="noreferrer"
+					rel="noreferrer sponsored"
 					onClick={() =>
 						trackRelatedProductClick({
 							product: "static_isp",
