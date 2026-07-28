@@ -136,7 +136,6 @@ export function parseMaxMindMinFraudResponse(
     organization:
       toStr(traits.organization) ??
       toStr(traits.autonomous_system_organization),
-    network_cidr: toStr(traits.network),
     proxy_type: proxyType,
     usage_type: toStr(traits.user_type),
     connection_type: connectionType,
@@ -148,6 +147,7 @@ export function parseMaxMindMinFraudResponse(
       traits.is_anonymous_proxy,
       traits.is_anonymous,
     ]),
+    is_residential_proxy: yesNoToBool(traits.is_residential_proxy),
     is_vpn: yesNoToBool(traits.is_anonymous_vpn),
     is_tor: yesNoToBool(traits.is_tor_exit_node),
     is_hosting: isHosting,

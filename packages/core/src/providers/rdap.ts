@@ -113,10 +113,10 @@ export const rdapProvider: IpProvider = {
       return null;
     }
     return {
-      country_code: toStr(payload.country),
+      registered_country_code: toStr(payload.country),
       organization: toStr(payload.name),
       rir: inferRir(payload),
-      network_cidr: cidr(payload),
+      allocation_cidr: cidr(payload),
       allocation_date: registrationDate(payload),
       abuse_contact: findAbuseContact(payload.entities),
       raw: payload,

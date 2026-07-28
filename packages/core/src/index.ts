@@ -37,5 +37,6 @@ export {
   type ProviderCategory,
   type ProviderResult,
   type RiskLevel,
+  type RpkiStatus,
   riskLevelFromScore,
 } from './schema.js';

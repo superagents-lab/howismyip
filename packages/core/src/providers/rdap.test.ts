@@ -50,10 +50,11 @@ test('rdap: full fixture walks entities and infers RIR', async () => {
   const result = await rdapProvider.lookup('8.8.8.8', {}, testContext());
   assert.ok(result);
   assert.equal(result.rir, 'ARIN');
-  assert.equal(result.network_cidr, '8.8.8.0/24');
+  assert.equal(result.allocation_cidr, '8.8.8.0/24');
   assert.equal(result.allocation_date, '2014-03-14T00:00:00Z');
   assert.equal(result.organization, 'GOGL');
-  assert.equal(result.country_code, 'US');
+  assert.equal(result.registered_country_code, 'US');
+  assert.equal(result.country_code, undefined);
   assert.equal(result.abuse_contact, 'abuse@example.com');
 });
 

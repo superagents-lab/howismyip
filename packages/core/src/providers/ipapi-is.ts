@@ -90,6 +90,9 @@ export function parseIpapiIsResponse(
   const score = companyScore.score ?? asnScore.score;
   const asnType = toStr(asn.type);
   const companyType = toStr(company.type);
+  const normalizedAsn = typedAsn(asn.asn);
+  const asnOrganization = toStr(asn.org);
+  const announcedPrefix = toStr(asn.route);
   const isDatacenter =
     yesNoToBool(payload.is_datacenter) ??
     (asnType === 'hosting' || companyType === 'hosting' ? true : null);
@@ -100,9 +103,9 @@ export function parseIpapiIsResponse(
     continent_code: toStr(location.continent),
     region: toStr(location.state),
     city: toStr(location.city),
-    asn: typedAsn(asn.asn),
+    asn: normalizedAsn,
     as_domain: toStr(asn.domain) ?? toStr(company.domain),
-    isp: toStr(asn.org) ?? toStr(company.name),
+    isp: asnOrganization ?? toStr(company.name),
     organization: toStr(company.name) ?? toStr(asn.org),
     proxy_type: proxyType(payload),
     usage_type: asnType,
@@ -117,7 +120,10 @@ export function parseIpapiIsResponse(
     is_abuser: yesNoToBool(payload.is_abuser),
     is_crawler: yesNoToBool(payload.is_crawler),
     rir: toStr(payload.rir) ?? toStr(asn.rir),
-    network_cidr: toStr(asn.route),
+    announced_prefix: announcedPrefix,
+    is_announced: announcedPrefix ? true : null,
+    origin_asns: normalizedAsn && announcedPrefix ? [normalizedAsn] : [],
+    origin_holders: asnOrganization && announcedPrefix ? [asnOrganization] : [],
     abuse_contact: toStr(asn.abuse) ?? toStr(abuse.email),
     risk_reasons: riskReasons(payload, companyScore.label, asnScore.label),
     raw: payload,

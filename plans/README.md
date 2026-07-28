@@ -20,6 +20,9 @@ Ask the advisor to plan any of them if wanted.
 | 003  | Short-TTL edge cache on `GET /api/ip/:ip` | P2 | M | — | DONE — merged to `main` (`9e04305`) |
 | 004  | Rate-limit the public IP-lookup API | P2 | M | 002, 003 | DONE — merged to `main` (`6ccb2cf`) |
 | 005  | Drop composite risk score — make `Consensus` factual-only | P1 | M | — | DONE — merged to `main` (`934867f` + cleanup `59706dc`) |
+| 006  | Add free network-provenance intelligence | P1 | L | 003, 004 | DONE — verified locally (2026-07-28) |
+| 007  | Reduce registration and routing redundancy | P1 | M | 006 | DONE — verified locally (2026-07-28) |
+| 008  | Integrate network evidence into basic facts | P1 | S | 007 | DONE — verified locally (2026-07-29) |
 
 > All four plans reviewed via `/improve execute` and merged into `main` (HEAD `6ab8f2d`).
 > Final integration verification: 28 core tests pass, web typecheck/lint/build all clean.

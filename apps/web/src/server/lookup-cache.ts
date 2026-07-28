@@ -25,7 +25,10 @@ import { QUOTA_SKIP_REASON, quotaExhaustedProviders } from "./provider-quota";
 // without making every refresh burn another full provider fan-out.
 const CACHE_TTL_SECONDS = 21_600; // 6h
 const PARTIAL_CACHE_TTL_SECONDS = 300; // 5m
-const CACHE_KEY_VERSION = 2;
+// Bump whenever the serialized IpReport shape changes. Version 3 separates
+// registry allocations from BGP announcements and replaces peer provenance
+// facts with relationship summaries.
+const CACHE_KEY_VERSION = 3;
 
 export function cacheTtlSecondsForStatuses(
 	statuses: Iterable<IpReport["sources"][number]["status"]>,

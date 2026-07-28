@@ -14,9 +14,10 @@ description: >-
 # howismyip
 
 Aggregate IP intelligence from many independent sources into one normalized
-report. Six sources run with **no API key**: ip-api.com (geo + proxy/hosting
+report. Seven sources run with **no API key**: ip-api.com (geo + proxy/hosting
 flags), GeoJS (geo + ASN), RDAP (registry allocation + abuse contact), Team
-Cymru (BGP/ASN), IP2Location, and ipapi.is. Paid sources (proxycheck, IPinfo,
+Cymru (BGP/ASN), RIPEstat (route announcement, RPKI, reverse DNS),
+IP2Location, and ipapi.is. Optional keyed sources (proxycheck, IPinfo,
 Scamalytics, AbuseIPDB, IPQualityScore, ipdata.co, and MaxMind minFraud) join
 automatically when keys are configured.
 
@@ -62,6 +63,7 @@ curl https://your-instance.example/api/ip/8.8.8.8
   "ip": "8.8.8.8",
   "consensus": {
     "country_name": "United States",
+    "registered_country_code": "US",
     "asn": "AS15169",
     "isp": "Google LLC",
     "rir": "ARIN",
@@ -75,6 +77,9 @@ curl https://your-instance.example/api/ip/8.8.8.8
 Guidance for answering:
 - There is no composite risk score — report each source's own score/flags and
   call out where sources disagree. Disagreement between sources is itself signal.
+- Keep geolocation country separate from `registered_country_code`. A mismatch
+  is a cross-layer fact to explain, not proof that either side is physically
+  correct.
 - `null` flags mean "unknown", not "false". Say so rather than asserting safety.
 - A `source` with `status: "error"` failed (rate limit, network); note reduced
   confidence if many failed. `source_count` tells you how many sources returned data.

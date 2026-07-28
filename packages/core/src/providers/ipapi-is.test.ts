@@ -66,7 +66,10 @@ test('ipapi.is: maps abuse score, type, and risk flags', () => {
   assert.equal(result.is_abuser, false);
   assert.equal(result.is_crawler, false);
   assert.equal(result.rir, 'ARIN');
-  assert.equal(result.network_cidr, '154.51.40.0/24');
+  assert.equal(result.announced_prefix, '154.51.40.0/24');
+  assert.equal(result.is_announced, true);
+  assert.deepEqual(result.origin_asns, ['AS46783']);
+  assert.deepEqual(result.origin_holders, ['EASY LINK LLC']);
   assert.equal(result.abuse_contact, 'noc@3rack.com');
   assert.deepEqual(result.risk_reasons, [
     'Company abuse score: Very Low',

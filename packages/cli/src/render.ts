@@ -1,4 +1,4 @@
-import type { IpReport } from '@howismyip/core';
+import type { FactKey, IpReport } from '@howismyip/core';
 
 const useColor = process.stdout.isTTY && process.env.NO_COLOR === undefined;
 const code = (n: number) => (s: string) => (useColor ? `[${n}m${s}[0m` : s);
@@ -16,7 +16,18 @@ function row(label: string, value: string): string {
   return `  ${c.gray(label.padEnd(12))} ${value}`;
 }
 
-/** The consensus block: blocklists, location, ASN, registry. */
+function primaryFact(report: IpReport, key: FactKey): string | null {
+  const fact = report.facts.find((item) => item.key === key);
+  if (!fact) {
+    return null;
+  }
+  return (
+    [...fact.values].sort((a, b) => b.sources.length - a.sources.length)[0]
+      ?.value ?? null
+  );
+}
+
+/** Human identity plus compact registration/routing relationships. */
 function consensusLines(report: IpReport): string[] {
   const { consensus: k } = report;
   const lines = [c.bold(c.green(`▍ ${report.ip}`))];
@@ -31,8 +42,45 @@ function consensusLines(report: IpReport): string[] {
   if (k.asn) {
     lines.push(row('asn', `${k.asn}${k.isp ? c.dim(` · ${k.isp}`) : ''}`));
   }
-  if (k.rir) {
-    lines.push(row('registry', k.rir));
+  const allocation = primaryFact(report, 'allocation');
+  const registration = [k.registered_country_code, k.rir, allocation]
+    .filter(Boolean)
+    .join(' · ');
+  if (registration) {
+    lines.push(row('registration', registration));
+  }
+  const announcedPrefix = primaryFact(report, 'announced_prefix');
+  const ptr = primaryFact(report, 'ptr');
+  const originAsn = primaryFact(report, 'origin_asn');
+  const originHolder = primaryFact(report, 'origin_holder');
+  const announcement = primaryFact(report, 'announcement');
+  const rpki = primaryFact(report, 'rpki');
+  const route =
+    originAsn && announcedPrefix
+      ? `${originAsn} → ${announcedPrefix}`
+      : (originAsn ?? announcedPrefix);
+  if (route) {
+    const routeState = [
+      announcement === 'announced'
+        ? 'announced'
+        : announcement === 'not_announced'
+          ? 'not announced'
+          : null,
+      rpki ? `RPKI ${rpki.replaceAll('_', ' ')}` : null,
+    ]
+      .filter(Boolean)
+      .join(' · ');
+    lines.push(
+      row(
+        'route',
+        `${route}${originHolder ? c.dim(` · ${originHolder}`) : ''}${
+          routeState ? c.dim(` · ${routeState}`) : ''
+        }`
+      )
+    );
+  }
+  if (ptr) {
+    lines.push(row('reverse dns', ptr));
   }
   return lines;
 }

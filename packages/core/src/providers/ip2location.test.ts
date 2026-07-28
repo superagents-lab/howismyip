@@ -80,6 +80,22 @@ test('ip2location: DCH usage is hosting when proxy flag is absent', () => {
   assert.equal(result.is_hosting, true);
 });
 
+test('ip2location: preserves a residential proxy as its own signal', () => {
+  const result = parseIp2LocationPayload('1.2.3.4', {
+    ip: '1.2.3.4',
+    is_proxy: true,
+    fraud_score: 80,
+    proxy: {
+      proxy_type: 'RES',
+      is_residential_proxy: true,
+    },
+  });
+
+  assert.equal(result.is_proxy, true);
+  assert.equal(result.is_residential_proxy, true);
+  assert.equal(result.proxy_type, 'RES');
+});
+
 test('ip2location: public lookup HTML maps fraud score and flags', () => {
   const result = parseIp2LocationHtml(
     '9.249.85.11',

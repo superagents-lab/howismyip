@@ -20,6 +20,7 @@ const TONE_CLASS: Record<Tone, string> = {
 };
 
 const FLAG_KEYS: Array<[keyof IpIntelligence, keyof Dictionary["signal"]]> = [
+	["is_residential_proxy", "residentialProxy"],
 	["is_proxy", "proxy"],
 	["is_vpn", "vpn"],
 	["is_tor", "tor"],
@@ -40,6 +41,7 @@ const DETAIL_FLAG_KEYS: Array<
 const VERDICT_SIGNAL_KEYS: Array<
 	[keyof IpIntelligence, keyof Dictionary["signal"]]
 > = [
+	["is_residential_proxy", "residentialProxy"],
 	["is_vpn", "vpn"],
 	["is_tor", "tor"],
 	["is_proxy", "proxy"],
@@ -190,7 +192,7 @@ function fieldsFor(d: IpIntelligence, t: Dictionary): Array<[string, string]> {
 		[f.companyType, d.company_type],
 		[f.connectionType, d.connection_type],
 		[f.rir, d.rir],
-		[f.network, d.network_cidr],
+		[f.announcedPrefix, d.announced_prefix],
 		[f.allocated, d.allocation_date],
 		[f.abuse, d.abuse_contact],
 	];

@@ -50,10 +50,10 @@ test('maxmind: maps minFraud IP risk and Insights traits', () => {
   assert.equal(result.as_domain, 'ntt.net');
   assert.equal(result.isp, 'NTT America');
   assert.equal(result.organization, 'NTT America, Inc.');
-  assert.equal(result.network_cidr, '176.46.140.0/24');
   assert.equal(result.proxy_type, 'Anonymous VPN');
   assert.equal(result.connection_type, 'Corporate');
   assert.equal(result.is_proxy, true);
+  assert.equal(result.is_residential_proxy, false);
   assert.equal(result.is_vpn, true);
   assert.equal(result.is_tor, false);
   assert.equal(result.is_hosting, false);
@@ -75,6 +75,7 @@ test('maxmind: residential proxy flag still marks is_proxy when public proxy is 
   assert.equal(result.risk_level, 'medium');
   assert.equal(result.proxy_type, 'Residential proxy');
   assert.equal(result.is_proxy, true);
+  assert.equal(result.is_residential_proxy, true);
 });
 
 test('maxmind: provider posts minimal minFraud Score request with basic auth', async () => {

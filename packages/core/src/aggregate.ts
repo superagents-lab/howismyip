@@ -119,6 +119,7 @@ function buildConsensus(sources: ProviderResult[]): Consensus {
     isp: firstAvailable(ok, 'isp'),
     organization: firstAvailable(ok, 'organization'),
     rir: firstAvailable(ok, 'rir'),
+    registered_country_code: firstAvailable(ok, 'registered_country_code'),
     blocklists,
     source_count: ok.length,
   };
@@ -128,9 +129,18 @@ const FACT_KEYS: FactKey[] = [
   'country',
   'city',
   'region',
+  'registration_country',
+  'rir',
+  'allocation',
   'asn',
   'isp',
   'organization',
+  'announced_prefix',
+  'ptr',
+  'announcement',
+  'origin_asn',
+  'origin_holder',
+  'rpki',
 ];
 
 const FACT_VALUE_READERS: Record<
@@ -153,11 +163,53 @@ const FACT_VALUE_READERS: Record<
   city: (data) => (data.city ? { group: data.city, value: data.city } : null),
   region: (data) =>
     data.region ? { group: data.region, value: data.region } : null,
+  registration_country: (data) =>
+    data.registered_country_code
+      ? {
+          group: data.registered_country_code,
+          value: data.registered_country_code,
+        }
+      : null,
+  rir: (data) => (data.rir ? { group: data.rir, value: data.rir } : null),
+  allocation: (data) =>
+    data.allocation_cidr
+      ? { group: data.allocation_cidr, value: data.allocation_cidr }
+      : null,
   asn: (data) => (data.asn ? { group: data.asn, value: data.asn } : null),
   isp: (data) => (data.isp ? { group: data.isp, value: data.isp } : null),
   organization: (data) =>
     data.organization
       ? { group: data.organization, value: data.organization }
+      : null,
+  announced_prefix: (data) =>
+    data.announced_prefix
+      ? { group: data.announced_prefix, value: data.announced_prefix }
+      : null,
+  ptr: (data) => (data.ptr ? { group: data.ptr, value: data.ptr } : null),
+  announcement: (data) => {
+    if (data.is_announced === null) {
+      return null;
+    }
+    const value = data.is_announced ? 'announced' : 'not_announced';
+    return { group: value, value };
+  },
+  origin_asn: (data) => {
+    if (data.origin_asns.length === 0) {
+      return null;
+    }
+    const value = [...data.origin_asns].sort().join(', ');
+    return { group: value, value };
+  },
+  origin_holder: (data) => {
+    if (data.origin_holders.length === 0) {
+      return null;
+    }
+    const value = [...data.origin_holders].sort().join(', ');
+    return { group: value, value };
+  },
+  rpki: (data) =>
+    data.rpki_status
+      ? { group: data.rpki_status, value: data.rpki_status }
       : null,
 };
 

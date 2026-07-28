@@ -64,12 +64,17 @@ export const cymruProvider: IpProvider = {
       }
     }
 
+    const normalizedAsn = asn ? `AS${asn}` : null;
+    const announcedPrefix = toStr(prefix);
     return {
-      asn: asn ? `AS${asn}` : null,
+      asn: normalizedAsn,
       organization: asName,
       isp: asName,
-      country_code: toStr(cc),
-      network_cidr: toStr(prefix),
+      registered_country_code: toStr(cc),
+      announced_prefix: announcedPrefix,
+      is_announced: announcedPrefix ? true : null,
+      origin_asns: normalizedAsn && announcedPrefix ? [normalizedAsn] : [],
+      origin_holders: asName && announcedPrefix ? [asName] : [],
       rir: toStr(registry)?.toUpperCase() ?? null,
       raw: { origin: originRaw, as_name: asName },
     };

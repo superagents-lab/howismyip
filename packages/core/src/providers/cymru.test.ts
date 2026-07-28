@@ -33,8 +33,12 @@ test('cymru: happy path parses origin and AS-name records', async () => {
   const result = await cymruProvider.lookup('1.2.3.4', {}, testContext());
   assert.ok(result);
   assert.equal(result.asn, 'AS15169');
-  assert.equal(result.network_cidr, '8.8.8.0/24');
-  assert.equal(result.country_code, 'US');
+  assert.equal(result.announced_prefix, '8.8.8.0/24');
+  assert.equal(result.is_announced, true);
+  assert.deepEqual(result.origin_asns, ['AS15169']);
+  assert.deepEqual(result.origin_holders, ['GOOGLE, US']);
+  assert.equal(result.registered_country_code, 'US');
+  assert.equal(result.country_code, undefined);
   assert.equal(result.rir, 'ARIN');
   assert.equal(result.organization, 'GOOGLE, US');
   assert.equal(result.isp, 'GOOGLE, US');

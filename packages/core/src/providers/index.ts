@@ -11,6 +11,7 @@ import { ipqsProvider } from './ipqs.js';
 import { maxmindProvider } from './maxmind.js';
 import { proxycheckProvider } from './proxycheck.js';
 import { rdapProvider } from './rdap.js';
+import { ripestatProvider } from './ripestat.js';
 import { scamalyticsProvider } from './scamalytics.js';
 import type { Env, IpProvider } from './types.js';
 
@@ -20,6 +21,7 @@ export const KEYLESS_PROVIDERS: IpProvider[] = [
   geojsProvider,
   rdapProvider,
   cymruProvider,
+  ripestatProvider,
   ip2locationProvider,
   ipapiIsProvider,
 ];

@@ -66,6 +66,58 @@ test('basic facts preserve source disagreements instead of choosing a winner', a
   ]);
 });
 
+test('registration country stays separate from geolocation country', async () => {
+  const report = await lookupIpWith(
+    [
+      fakeProvider('geo', { country_code: 'US' }),
+      fakeProvider('registry', { registered_country_code: 'ES' }),
+    ],
+    '8.8.8.8',
+    {}
+  );
+
+  const geo = report.facts.find((f) => f.key === 'country');
+  const registration = report.facts.find(
+    (f) => f.key === 'registration_country'
+  );
+  assert.deepEqual(geo?.values, [{ value: 'US', sources: ['geo'] }]);
+  assert.equal(geo?.conflict, false);
+  assert.deepEqual(registration?.values, [
+    { value: 'ES', sources: ['registry'] },
+  ]);
+  assert.equal(report.consensus.country_code, 'US');
+  assert.equal(report.consensus.registered_country_code, 'ES');
+});
+
+test('registry allocation and BGP announcement stay separate', async () => {
+  const report = await lookupIpWith(
+    [
+      fakeProvider('registry', {
+        allocation_cidr: '8.0.0.0/9',
+        rir: 'ARIN',
+      }),
+      fakeProvider('route-a', {
+        announced_prefix: '8.8.8.0/24',
+        origin_asns: ['AS15169'],
+      }),
+      fakeProvider('route-b', {
+        announced_prefix: '8.8.8.0/24',
+        origin_asns: ['AS15169'],
+      }),
+    ],
+    '8.8.8.8',
+    {}
+  );
+
+  assert.deepEqual(report.facts.find((f) => f.key === 'allocation')?.values, [
+    { value: '8.0.0.0/9', sources: ['registry'] },
+  ]);
+  assert.deepEqual(
+    report.facts.find((f) => f.key === 'announced_prefix')?.values,
+    [{ value: '8.8.8.0/24', sources: ['route-a', 'route-b'] }]
+  );
+});
+
 test('records per-source status without failing the whole report', async () => {
   const report = await lookupIpWith(
     [

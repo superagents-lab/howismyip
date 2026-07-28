@@ -9,6 +9,12 @@
  */
 
 export type RiskLevel = 'low' | 'medium' | 'high';
+export type RpkiStatus =
+  | 'valid'
+  | 'invalid_asn'
+  | 'invalid_length'
+  | 'unknown'
+  | 'mixed';
 
 /** Coarse classification of what a provider contributes. Drives UI card variants. */
 export type ProviderCategory =
@@ -30,11 +36,20 @@ export interface IpIntelligence {
   region: string | null;
   city: string | null;
 
+  // registry/allocation geography — deliberately separate from geolocation
+  registered_country_code: string | null;
+
   // network / ASN
   asn: string | null;
   as_domain: string | null;
   isp: string | null;
   organization: string | null;
+  announced_prefix: string | null;
+  ptr: string | null;
+  is_announced: boolean | null;
+  origin_asns: string[];
+  origin_holders: string[];
+  rpki_status: RpkiStatus | null;
 
   // risk / classification
   proxy_type: string | null;
@@ -52,10 +67,11 @@ export interface IpIntelligence {
   is_crawler: boolean | null;
   is_anycast: boolean | null;
   is_relay: boolean | null;
+  is_residential_proxy: boolean | null;
 
   // registry (RDAP / Team Cymru)
   rir: string | null; // ARIN / RIPE / APNIC / LACNIC / AFRINIC
-  network_cidr: string | null; // allocated prefix, e.g. 8.8.8.0/24
+  allocation_cidr: string | null; // registry allocation, e.g. 8.8.8.0/24
   allocation_date: string | null; // ISO date
   abuse_contact: string | null;
 
@@ -94,6 +110,7 @@ export interface Consensus {
   isp: string | null;
   organization: string | null;
   rir: string | null;
+  registered_country_code: string | null;
   blocklists: string[]; // union across sources (factual: which lists the IP is on)
   /** How many providers contributed a non-empty record. */
   source_count: number;
@@ -103,9 +120,18 @@ export type FactKey =
   | 'country'
   | 'city'
   | 'region'
+  | 'registration_country'
+  | 'rir'
+  | 'allocation'
   | 'asn'
   | 'isp'
-  | 'organization';
+  | 'organization'
+  | 'announced_prefix'
+  | 'ptr'
+  | 'announcement'
+  | 'origin_asn'
+  | 'origin_holder'
+  | 'rpki';
 
 export interface FactValue {
   value: string;
@@ -140,10 +166,17 @@ export function emptyIntelligence(ip: string): IpIntelligence {
     continent_name: null,
     region: null,
     city: null,
+    registered_country_code: null,
     asn: null,
     as_domain: null,
     isp: null,
     organization: null,
+    announced_prefix: null,
+    ptr: null,
+    is_announced: null,
+    origin_asns: [],
+    origin_holders: [],
+    rpki_status: null,
     proxy_type: null,
     usage_type: null,
     company_type: null,
@@ -159,8 +192,9 @@ export function emptyIntelligence(ip: string): IpIntelligence {
     is_crawler: null,
     is_anycast: null,
     is_relay: null,
+    is_residential_proxy: null,
     rir: null,
-    network_cidr: null,
+    allocation_cidr: null,
     allocation_date: null,
     abuse_contact: null,
     blocklists: [],

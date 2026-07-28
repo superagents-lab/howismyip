@@ -10,7 +10,7 @@
   "routes": [{ "pattern": "howismyip.xyz", "custom_domain": true }],
   // Public deployment policy (not credentials). Keep secrets in Cloudflare.
   "vars": {
-    "HOWISMYIP_DAILY_BUDGETS": "proxycheck:900,abuseipdb:900,ipdata:1350,ipqs:900,scamalytics:4500,ipinfo:90,maxmind:300"
+    "HOWISMYIP_DAILY_BUDGETS": "ripestat:100,proxycheck:900,abuseipdb:900,ipdata:1350,ipqs:900,scamalytics:4500,ipinfo:90,maxmind:300"
   },
   "ratelimits": [
     {

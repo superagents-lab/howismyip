@@ -20,7 +20,7 @@ a **CLI** and a **Claude Code skill** so agents can call it. Open source (MIT).
 
 ## Sources
 
-Six sources run with **no API key** — clone, install, go:
+Seven sources run with **no API key** — clone, install, go:
 
 | Source | Category | Provides |
 | --- | --- | --- |
@@ -28,6 +28,7 @@ Six sources run with **no API key** — clone, install, go:
 | GeoJS | network | geo + ASN (independent cross-check) |
 | RDAP (rdap.org) | registry | RIR, allocated CIDR, registration date, abuse contact |
 | Team Cymru | network | BGP-derived origin ASN, announced prefix, registry (via DoH) |
+| RIPEstat | network | route announcement, origin ASN/holder, RPKI validity, reverse DNS |
 | IP2Location | risk | public lookup page scrape: fraud score, usage type, proxy/VPN/Tor/datacenter flags |
 | ipapi.is | risk | abuse score, ASN/company type, proxy/VPN/Tor/datacenter/abuser/crawler flags |
 
@@ -52,6 +53,21 @@ Notes:
 - The basic facts panel shows factual fields such as country, city, ASN, ISP,
   and organization with source counts and expandable source lists. It is not a
   risk score.
+- The registration and routing panel turns the lower-level evidence into three
+  relationships instead of repeating every field: registry allocation, BGP
+  origin → announced prefix, and reverse DNS. Expand a row to inspect each
+  constituent value and source.
+- Registry allocation prefixes and BGP announced prefixes are modeled
+  separately even when they happen to be the same CIDR.
+- Geolocation country and registration/allocation country are separate facts.
+  A mismatch is evidence worth inspecting, not a reason to silently choose one.
+- New suppliers must be free/open-data or provide a recurring free allowance,
+  expose an official machine-readable interface, and be quota-protected when
+  their published fair-use allowance is finite. A non-renewing trial does not
+  qualify.
+- RIPEstat DNS blocklists and transfer history are not queried yet: DNSBL jobs
+  are asynchronous, while transfer history can fail for ordinary prefixes.
+  Neither can be allowed to turn pending/unavailable data into a clean result.
 - IP2Location is keyless here because it scrapes the public lookup page rather
   than calling the paid API.
 - The optional `MaxMind minFraud` provider uses MaxMind's official API and is
@@ -183,7 +199,7 @@ echo "$PROXYCHECK_API_KEY" | pnpm dlx wrangler secret put PROXYCHECK_API_KEY
 pnpm run deploy                               # build + wrangler deploy
 ```
 
-The six keyless sources work with no secrets. To serve a custom domain, add it
+The seven keyless sources work with no secrets. To serve a custom domain, add it
 to your Cloudflare account and set a route in `wrangler.jsonc`.
 
 **Git-connected deploys (Cloudflare Workers Builds):** this repo is a pnpm
