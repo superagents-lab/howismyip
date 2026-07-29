@@ -5,7 +5,7 @@ type Gtag = (...args: unknown[]) => void;
 
 declare global {
 	interface Window {
-		dataLayer?: unknown[][];
+		dataLayer?: unknown[];
 		gtag?: Gtag;
 		__howismyipGaMeasurementId?: string;
 		__howismyipGaLastPagePath?: string;
@@ -70,8 +70,11 @@ export function initializeGoogleAnalytics(
 	win.dataLayer = win.dataLayer ?? [];
 	win.gtag =
 		win.gtag ??
-		function gtag(...args: unknown[]) {
-			win.dataLayer?.push(args);
+		function gtag() {
+			// Google tag commands must retain the array-like `arguments` shape
+			// used by the official snippet; a regular Array is ignored.
+			// biome-ignore lint/complexity/noArguments: required by the Google tag command protocol
+			win.dataLayer?.push(arguments);
 		};
 
 	win.__howismyipGaMeasurementId = measurementId;

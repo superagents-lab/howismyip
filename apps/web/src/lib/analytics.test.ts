@@ -17,6 +17,11 @@ function resetAnalytics() {
 	document.getElementById("howismyip-google-analytics")?.remove();
 }
 
+function gtagCommandAt(index: number): unknown[] | undefined {
+	const entry = window.dataLayer?.[index];
+	return entry == null ? undefined : Array.from(entry as ArrayLike<unknown>);
+}
+
 describe("Google Analytics", () => {
 	beforeEach(() => {
 		resetAnalytics();
@@ -43,7 +48,8 @@ describe("Google Analytics", () => {
 		expect(
 			document.querySelectorAll("#howismyip-google-analytics"),
 		).toHaveLength(1);
-		expect(window.dataLayer?.[1]).toEqual([
+		expect(Array.isArray(window.dataLayer?.[0])).toBe(false);
+		expect(gtagCommandAt(1)).toEqual([
 			"config",
 			"G-ABC123XYZ",
 			{
@@ -74,7 +80,9 @@ describe("Google Analytics", () => {
 		expect(trackPageView("/en/8.8.8.8")).toBe(true);
 		expect(trackPageView("/en/1.1.1.1")).toBe(true);
 
-		expect(window.dataLayer?.slice(2)).toEqual([
+		expect(
+			window.dataLayer?.slice(2).map((_, index) => gtagCommandAt(index + 2)),
+		).toEqual([
 			[
 				"event",
 				"page_view",
@@ -117,7 +125,7 @@ describe("Google Analytics", () => {
 				language: "zh",
 			}),
 		).toBe(true);
-		expect(window.dataLayer?.at(-1)).toEqual([
+		expect(gtagCommandAt((window.dataLayer?.length ?? 0) - 1)).toEqual([
 			"event",
 			"related_product_click",
 			{
