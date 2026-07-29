@@ -11,6 +11,7 @@ dist/
 .dev.vars
 .dev.vars.*
 .DS_Store
+.claude/
 *.log
 coverage/
 .wrangler/
