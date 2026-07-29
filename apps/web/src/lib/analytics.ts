@@ -19,8 +19,36 @@ export interface RelatedProductClick {
 	language?: string;
 }
 
+export interface AnalyticsPageContext {
+	page_location: string;
+	page_path: string;
+	page_title: string;
+}
+
 export function isGaMeasurementId(value: string | undefined): value is string {
 	return GA_MEASUREMENT_ID_PATTERN.test(value ?? "");
+}
+
+/**
+ * Keeps GA page context useful without sending a queried IP (or arbitrary
+ * query/hash values) to Google.
+ */
+export function getAnalyticsPageContext(
+	routeHref: string,
+	win: Window = window,
+	doc: Document = document,
+): AnalyticsPageContext {
+	const location = new URL(routeHref, win.location.origin);
+	const isIpReport = /^\/(en|zh)\/[^/]+\/?$/.test(location.pathname);
+	const pagePath = isIpReport
+		? location.pathname.replace(/\/[^/]+\/?$/, "/:ip")
+		: location.pathname;
+
+	return {
+		page_location: new URL(pagePath, location.origin).href,
+		page_path: pagePath,
+		page_title: isIpReport ? "IP report · howismyip" : doc.title,
+	};
 }
 
 /**
@@ -48,7 +76,10 @@ export function initializeGoogleAnalytics(
 
 	win.__howismyipGaMeasurementId = measurementId;
 	win.gtag("js", new Date());
-	win.gtag("config", measurementId, { send_page_view: false });
+	win.gtag("config", measurementId, {
+		send_page_view: false,
+		...getAnalyticsPageContext(win.location.href, win, doc),
+	});
 
 	if (!doc.getElementById(GA_SCRIPT_ID)) {
 		const script = doc.createElement("script");
@@ -70,14 +101,12 @@ export function trackPageView(
 	if (!win.gtag || !win.__howismyipGaMeasurementId) return false;
 
 	const location = new URL(routeHref, win.location.origin);
-	const pagePath = `${location.pathname}${location.search}${location.hash}`;
-	if (win.__howismyipGaLastPagePath === pagePath) return false;
+	const routeKey = `${location.pathname}${location.search}${location.hash}`;
+	if (win.__howismyipGaLastPagePath === routeKey) return false;
 
-	win.__howismyipGaLastPagePath = pagePath;
+	win.__howismyipGaLastPagePath = routeKey;
 	win.gtag("event", "page_view", {
-		page_location: location.href,
-		page_path: pagePath,
-		page_title: doc.title,
+		...getAnalyticsPageContext(location.href, win, doc),
 	});
 	return true;
 }
@@ -86,6 +115,7 @@ export function trackPageView(
 export function trackRelatedProductClick(
 	click: RelatedProductClick,
 	win: Window = window,
+	doc: Document = document,
 ): boolean {
 	if (!win.gtag || !win.__howismyipGaMeasurementId) return false;
 
@@ -94,6 +124,7 @@ export function trackRelatedProductClick(
 		placement: click.placement,
 		link_url: click.destination,
 		language: click.language,
+		...getAnalyticsPageContext(win.location.href, win, doc),
 	});
 	return true;
 }

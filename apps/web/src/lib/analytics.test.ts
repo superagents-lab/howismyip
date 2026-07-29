@@ -2,6 +2,7 @@
 
 import { beforeEach, describe, expect, it } from "vitest";
 import {
+	getAnalyticsPageContext,
 	initializeGoogleAnalytics,
 	isGaMeasurementId,
 	trackPageView,
@@ -45,24 +46,41 @@ describe("Google Analytics", () => {
 		expect(window.dataLayer?.[1]).toEqual([
 			"config",
 			"G-ABC123XYZ",
-			{ send_page_view: false },
+			{
+				send_page_view: false,
+				page_location: "http://localhost:3000/en",
+				page_path: "/en",
+				page_title: "howismyip test",
+			},
 		]);
 	});
 
-	it("tracks each SPA location once", () => {
+	it("redacts IP report locations, titles, query strings, and hashes", () => {
+		document.title = "8.8.8.8 · howismyip";
+		expect(
+			getAnalyticsPageContext("/zh/8.8.8.8?address=1.1.1.1#8.8.4.4"),
+		).toEqual({
+			page_location: "http://localhost:3000/zh/:ip",
+			page_path: "/zh/:ip",
+			page_title: "IP report · howismyip",
+		});
+	});
+
+	it("tracks each actual SPA location once with sanitized context", () => {
 		initializeGoogleAnalytics("G-ABC123XYZ");
 
 		expect(trackPageView("/zh?source=test")).toBe(true);
 		expect(trackPageView("/zh?source=test")).toBe(false);
 		expect(trackPageView("/en/8.8.8.8")).toBe(true);
+		expect(trackPageView("/en/1.1.1.1")).toBe(true);
 
 		expect(window.dataLayer?.slice(2)).toEqual([
 			[
 				"event",
 				"page_view",
 				{
-					page_location: "http://localhost:3000/zh?source=test",
-					page_path: "/zh?source=test",
+					page_location: "http://localhost:3000/zh",
+					page_path: "/zh",
 					page_title: "howismyip test",
 				},
 			],
@@ -70,15 +88,26 @@ describe("Google Analytics", () => {
 				"event",
 				"page_view",
 				{
-					page_location: "http://localhost:3000/en/8.8.8.8",
-					page_path: "/en/8.8.8.8",
-					page_title: "howismyip test",
+					page_location: "http://localhost:3000/en/:ip",
+					page_path: "/en/:ip",
+					page_title: "IP report · howismyip",
+				},
+			],
+			[
+				"event",
+				"page_view",
+				{
+					page_location: "http://localhost:3000/en/:ip",
+					page_path: "/en/:ip",
+					page_title: "IP report · howismyip",
 				},
 			],
 		]);
 	});
 
-	it("tracks related-product clicks with funnel dimensions", () => {
+	it("tracks related-product clicks with a sanitized page context", () => {
+		window.history.replaceState({}, "", "/zh/8.8.8.8?source=test");
+		document.title = "8.8.8.8 · howismyip";
 		initializeGoogleAnalytics("G-ABC123XYZ");
 		expect(
 			trackRelatedProductClick({
@@ -96,6 +125,9 @@ describe("Google Analytics", () => {
 				placement: "footer_credit",
 				link_url: "https://www.search1api.com/",
 				language: "zh",
+				page_location: "http://localhost:3000/zh/:ip",
+				page_path: "/zh/:ip",
+				page_title: "IP report · howismyip",
 			},
 		]);
 	});
