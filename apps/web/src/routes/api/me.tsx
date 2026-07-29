@@ -31,7 +31,7 @@ export const Route = createFileRoute("/api/me")({
 					);
 				}
 				try {
-					const { report, cache } = await cachedLookup(ip);
+					const { report, cache } = await cachedLookup(ip, "api_me");
 					return Response.json(report, {
 						headers: { ...CORS, "x-cache": cache },
 					});

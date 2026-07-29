@@ -15,7 +15,7 @@ export const Route = createFileRoute("/api/ip/$ip")({
 					return limited;
 				}
 				try {
-					const { report, cache } = await cachedLookup(params.ip);
+					const { report, cache } = await cachedLookup(params.ip, "api_ip");
 					return Response.json(report, {
 						headers: { ...CORS, "x-cache": cache },
 					});

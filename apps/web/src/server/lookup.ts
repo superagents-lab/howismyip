@@ -24,25 +24,50 @@ import { isRateLimited } from "./rate-limit.server";
 /** Error codes are translated client-side so the UI can localize them. */
 export type LookupErrorCode = "invalid" | "failed" | "rateLimited";
 
+export interface LookupResponseTelemetry {
+	cacheStatus: "HIT" | "MISS" | "BYPASS" | null;
+	serverDurationMs: number;
+}
+
 export interface LookupResult {
 	report: IpReport | null;
 	errorCode: LookupErrorCode | null;
+	telemetry?: LookupResponseTelemetry;
 }
 
 /** Server function used by route loaders to look up an arbitrary IP (SSR). */
 export const lookupIpFn = createServerFn({ method: "GET" })
 	.validator((ip: unknown) => String(ip ?? "").trim())
 	.handler(async ({ data }): Promise<LookupResult> => {
+		const startedAt = Date.now();
 		if (await isRateLimited()) {
-			return { report: null, errorCode: "rateLimited" };
+			return {
+				report: null,
+				errorCode: "rateLimited",
+				telemetry: {
+					cacheStatus: null,
+					serverDurationMs: Date.now() - startedAt,
+				},
+			};
 		}
 		try {
-			const { report } = await cachedLookup(data);
-			return { report, errorCode: null };
+			const { report, cache } = await cachedLookup(data, "ip_server_fn");
+			return {
+				report,
+				errorCode: null,
+				telemetry: {
+					cacheStatus: cache,
+					serverDurationMs: Date.now() - startedAt,
+				},
+			};
 		} catch (err) {
 			return {
 				report: null,
 				errorCode: err instanceof InvalidIpError ? "invalid" : "failed",
+				telemetry: {
+					cacheStatus: null,
+					serverDurationMs: Date.now() - startedAt,
+				},
 			};
 		}
 	});
@@ -99,7 +124,7 @@ export const lookupSelfFn = createServerFn({ method: "GET" }).handler(
 				reason: headerIp ? "private" : "undetectable",
 			};
 		}
-		const { report } = await cachedLookup(ip);
+		const { report } = await cachedLookup(ip, "self_server_fn");
 		return { ip, report, reason: null };
 	},
 );

@@ -6,6 +6,12 @@ import { ProductCredit } from "../../components/product-credit";
 import { ReportView } from "../../components/report-view";
 import { getDictionary, isLocale } from "../../i18n/messages";
 import { useT } from "../../i18n/use-t";
+import {
+	ensureLookupStarted,
+	inferIpVersion,
+	type LookupOutcome,
+	trackLookupCompleted,
+} from "../../lib/analytics";
 import { buildSocialMeta, SITE_ORIGIN } from "../../lib/social-meta";
 import { type LookupResult, lookupIpFn } from "../../server/lookup";
 
@@ -34,12 +40,23 @@ interface LookupState {
 	result?: LookupResult;
 }
 
+function lookupOutcome(errorCode: LookupResult["errorCode"]): LookupOutcome {
+	if (errorCode === "invalid") return "invalid";
+	if (errorCode === "rateLimited") return "rate_limited";
+	if (errorCode === "failed") return "failed";
+	return "success";
+}
+
 function IpPage() {
 	const { ip } = Route.useParams();
 	const [lookup, setLookup] = useState<LookupState>(() => ({ ip }));
 
 	useEffect(() => {
 		let active = true;
+		ensureLookupStarted({
+			mode: "direct",
+			ipVersion: inferIpVersion(ip),
+		});
 		setLookup({ ip });
 
 		lookupIpFn({ data: ip }).then(
@@ -62,6 +79,18 @@ function IpPage() {
 			active = false;
 		};
 	}, [ip]);
+
+	useEffect(() => {
+		if (lookup.ip !== ip || !lookup.result) return;
+		const { report, errorCode, telemetry } = lookup.result;
+		trackLookupCompleted({
+			outcome: lookupOutcome(errorCode),
+			ipVersion: inferIpVersion(ip),
+			cacheStatus: telemetry?.cacheStatus,
+			serverDurationMs: telemetry?.serverDurationMs,
+			providers: report?.sources,
+		});
+	}, [ip, lookup]);
 
 	if (lookup.ip !== ip || !lookup.result) {
 		return <IpPending />;

@@ -1,6 +1,12 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useLocale, useT } from "../i18n/use-t";
+import {
+	inferIpVersion,
+	type LookupMode,
+	trackLookupCompleted,
+	trackLookupStarted,
+} from "../lib/analytics";
 import { lookupSelfFn } from "../server/lookup";
 
 export function QueryLoader({
@@ -43,10 +49,23 @@ export function IpSearch({ initial = "" }: { initial?: string }) {
 	const busy = searching || scanning;
 	const busyLabel = scanning ? t.search.scanning : t.search.searching;
 
-	async function go(ip: string) {
+	async function go(ip: string, mode: LookupMode, measurementStarted = false) {
+		if (!measurementStarted) {
+			trackLookupStarted({
+				mode,
+				ipVersion: inferIpVersion(ip),
+			});
+		}
 		setSearching(true);
+		setNote(null);
 		try {
 			await navigate({ to: "/$lang/$ip", params: { lang, ip } });
+		} catch {
+			trackLookupCompleted({
+				outcome: "failed",
+				ipVersion: inferIpVersion(ip),
+			});
+			setNote(t.error.failed);
 		} finally {
 			setSearching(false);
 		}
@@ -56,7 +75,7 @@ export function IpSearch({ initial = "" }: { initial?: string }) {
 		e.preventDefault();
 		const ip = value.trim();
 		if (ip && !busy) {
-			go(ip);
+			void go(ip, "manual");
 		}
 	}
 
@@ -64,14 +83,24 @@ export function IpSearch({ initial = "" }: { initial?: string }) {
 		if (busy) {
 			return;
 		}
+		trackLookupStarted({ mode: "self", ipVersion: "unknown" });
 		setScanning(true);
 		setNote(null);
 		try {
 			const self = await lookupSelfFn();
 			if (self.ip && self.reason === null) {
-				await go(self.ip);
+				await go(self.ip, "self", true);
 				return;
 			}
+			trackLookupCompleted({
+				outcome:
+					self.reason === "rateLimited"
+						? "rate_limited"
+						: self.reason === "private"
+							? "private"
+							: "undetectable",
+				ipVersion: inferIpVersion(self.ip),
+			});
 			setNote(
 				self.reason === "rateLimited"
 					? t.error.rateLimited
@@ -79,6 +108,9 @@ export function IpSearch({ initial = "" }: { initial?: string }) {
 						? t.search.notePrivate(self.ip)
 						: t.search.noteUndetectable,
 			);
+		} catch {
+			trackLookupCompleted({ outcome: "failed", ipVersion: "unknown" });
+			setNote(t.error.failed);
 		} finally {
 			setScanning(false);
 		}

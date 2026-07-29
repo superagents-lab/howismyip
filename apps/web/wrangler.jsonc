@@ -6,7 +6,10 @@
   // Custom entry: re-exports the TanStack Start handler + Durable Object classes.
   "main": "src/server-entry.ts",
   "workers_dev": true,
-  "observability": { "enabled": true },
+  "observability": {
+    "enabled": true,
+    "logs": { "enabled": true, "head_sampling_rate": 1 }
+  },
   "routes": [{ "pattern": "howismyip.xyz", "custom_domain": true }],
   // Public deployment policy (not credentials). Keep secrets in Cloudflare.
   "vars": {

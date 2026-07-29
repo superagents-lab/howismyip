@@ -18,6 +18,12 @@ import {
 	lookupIp,
 	normalizeIp,
 } from "@howismyip/core";
+import {
+	buildLookupTelemetry,
+	type LookupCacheStatus,
+	type LookupEntrypoint,
+	logLookupTelemetry,
+} from "./lookup-observability.server";
 import { QUOTA_SKIP_REASON, quotaExhaustedProviders } from "./provider-quota";
 
 // Complete IP intelligence is stable over hours. Partial reports with a
@@ -75,7 +81,23 @@ export interface CachedLookup {
 	report: IpReport;
 	/** HIT = served from edge cache; MISS = computed and stored; BYPASS = no
 	 *  cache on this runtime (e.g. plain Node dev). */
-	cache: "HIT" | "MISS" | "BYPASS";
+	cache: LookupCacheStatus;
+}
+
+function observeLookup(
+	result: CachedLookup,
+	startedAt: number,
+	entrypoint: LookupEntrypoint,
+): CachedLookup {
+	logLookupTelemetry(
+		buildLookupTelemetry(
+			result.report,
+			result.cache,
+			Date.now() - startedAt,
+			entrypoint,
+		),
+	);
+	return result;
 }
 
 /** Providers whose daily budget is spent are skipped, not called. */
@@ -93,20 +115,32 @@ function computeReport(ip: string): Promise<IpReport> {
  * input (before touching cache or quota). `lookupIp` absorbs per-provider
  * errors into partial reports, which are cached briefly instead of for 6h.
  */
-export async function cachedLookup(rawIp: string): Promise<CachedLookup> {
+export async function cachedLookup(
+	rawIp: string,
+	entrypoint: LookupEntrypoint = "unknown",
+): Promise<CachedLookup> {
+	const startedAt = Date.now();
 	const ip = normalizeIp(rawIp);
 	if (!ip) {
 		throw new InvalidIpError(rawIp);
 	}
 	const cache = edgeCache();
 	if (!cache) {
-		return { report: await computeReport(ip), cache: "BYPASS" };
+		return observeLookup(
+			{ report: await computeReport(ip), cache: "BYPASS" },
+			startedAt,
+			entrypoint,
+		);
 	}
 	const key = cacheKey(ip);
 
 	const hit = await cache.match(key);
 	if (hit) {
-		return { report: (await hit.json()) as IpReport, cache: "HIT" };
+		return observeLookup(
+			{ report: (await hit.json()) as IpReport, cache: "HIT" },
+			startedAt,
+			entrypoint,
+		);
 	}
 
 	const report = await computeReport(ip);
@@ -119,5 +153,5 @@ export async function cachedLookup(rawIp: string): Promise<CachedLookup> {
 			headers: { "cache-control": `public, max-age=${ttl}` },
 		}),
 	);
-	return { report, cache: "MISS" };
+	return observeLookup({ report, cache: "MISS" }, startedAt, entrypoint);
 }

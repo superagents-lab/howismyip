@@ -2,9 +2,13 @@
 
 import { beforeEach, describe, expect, it } from "vitest";
 import {
+	ensureLookupStarted,
 	getAnalyticsPageContext,
+	inferIpVersion,
 	initializeGoogleAnalytics,
 	isGaMeasurementId,
+	trackLookupCompleted,
+	trackLookupStarted,
 	trackPageView,
 	trackRelatedProductClick,
 } from "./analytics";
@@ -14,6 +18,7 @@ function resetAnalytics() {
 	window.gtag = undefined;
 	window.__howismyipGaMeasurementId = undefined;
 	window.__howismyipGaLastPagePath = undefined;
+	window.__howismyipPendingLookup = undefined;
 	document.getElementById("howismyip-google-analytics")?.remove();
 }
 
@@ -111,6 +116,137 @@ describe("Google Analytics", () => {
 				},
 			],
 		]);
+	});
+
+	it("infers only the IP version needed for analytics", () => {
+		expect(inferIpVersion("8.8.8.8")).toBe("ipv4");
+		expect(inferIpVersion("2001:4860:4860::8888")).toBe("ipv6");
+		expect(inferIpVersion("not-an-ip")).toBe("unknown");
+	});
+
+	it("tracks lookup duration and provider summaries without the queried IP", () => {
+		window.history.replaceState({}, "", "/en/8.8.8.8");
+		initializeGoogleAnalytics("G-ABC123XYZ");
+
+		expect(
+			trackLookupStarted(
+				{ mode: "manual", ipVersion: "ipv4" },
+				window,
+				document,
+				100,
+			),
+		).toBe(true);
+		expect(
+			trackLookupCompleted(
+				{
+					outcome: "success",
+					ipVersion: "ipv4",
+					cacheStatus: "MISS",
+					serverDurationMs: 1_020.4,
+					providers: [
+						{
+							id: "geojs",
+							status: "ok",
+							durationMs: 82,
+							error: null,
+						},
+						{
+							id: "rdap",
+							status: "error",
+							durationMs: 1_000,
+							error: "Timeout after 1000ms",
+						},
+						{
+							id: "ipinfo",
+							status: "skipped",
+							durationMs: 0,
+							error: "quota exhausted",
+						},
+					],
+				},
+				window,
+				document,
+				1_250.2,
+			),
+		).toBe(true);
+
+		expect(gtagCommandAt(2)).toEqual([
+			"event",
+			"ip_lookup_started",
+			{
+				lookup_mode: "manual",
+				ip_version: "ipv4",
+				page_location: "http://localhost:3000/en/:ip",
+				page_path: "/en/:ip",
+				page_title: "IP report · howismyip",
+			},
+		]);
+		expect(gtagCommandAt(3)).toEqual([
+			"event",
+			"ip_lookup_completed",
+			{
+				lookup_mode: "manual",
+				ip_version: "ipv4",
+				outcome: "success",
+				duration_ms: 1150,
+				cache_status: "miss",
+				provider_total: 3,
+				provider_ok: 1,
+				provider_error: 1,
+				provider_skipped: 1,
+				provider_timeout: 1,
+				server_duration_ms: 1020,
+				slowest_provider: "rdap",
+				slowest_provider_ms: 1000,
+				page_location: "http://localhost:3000/en/:ip",
+				page_path: "/en/:ip",
+				page_title: "IP report · howismyip",
+			},
+		]);
+		expect(JSON.stringify([gtagCommandAt(2), gtagCommandAt(3)])).not.toContain(
+			"8.8.8.8",
+		);
+		expect(window.__howismyipPendingLookup).toBeUndefined();
+	});
+
+	it("keeps a click timer when the report route ensures direct tracking", () => {
+		initializeGoogleAnalytics("G-ABC123XYZ");
+		trackLookupStarted(
+			{ mode: "manual", ipVersion: "ipv4" },
+			window,
+			document,
+			100,
+		);
+
+		expect(
+			ensureLookupStarted(
+				{ mode: "direct", ipVersion: "ipv4" },
+				window,
+				document,
+				200,
+			),
+		).toBe(false);
+		expect(
+			trackLookupCompleted(
+				{ outcome: "failed", ipVersion: "ipv4" },
+				window,
+				document,
+				350,
+			),
+		).toBe(true);
+		expect(gtagCommandAt(3)?.[2]).toMatchObject({
+			lookup_mode: "manual",
+			duration_ms: 250,
+			outcome: "failed",
+		});
+		expect(
+			trackLookupCompleted(
+				{ outcome: "failed", ipVersion: "ipv4" },
+				window,
+				document,
+				500,
+			),
+		).toBe(false);
 	});
 
 	it("tracks related-product clicks with a sanitized page context", () => {

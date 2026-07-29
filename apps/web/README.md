@@ -56,6 +56,14 @@ a Worker secret. Local/manual builds read it from `.env`; for Cloudflare
 Workers Builds, add it as a build variable. The app does not load Google's
 script in development or when this value is absent.
 
+GA4 receives privacy-safe `ip_lookup_started` and `ip_lookup_completed` events
+for user-perceived lookup timing. Event parameters include the lookup mode,
+IP version, outcome, cache status, provider counts, and duration, but never the
+queried IP or its unsanitized report URL. Cloudflare Workers Logs separately
+receive one structured `ip_lookup_completed` object per cached lookup call for
+server duration and upstream-provider diagnosis; those objects also exclude IP
+addresses, provider URLs, and raw error messages.
+
 Common optional secrets:
 
 - `PROXYCHECK_API_KEY`
