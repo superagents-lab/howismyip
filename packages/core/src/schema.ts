@@ -67,7 +67,6 @@ export interface IpIntelligence {
   is_crawler: boolean | null;
   is_anycast: boolean | null;
   is_relay: boolean | null;
-  is_residential_proxy: boolean | null;
 
   // registry (RDAP / Team Cymru)
   rir: string | null; // ARIN / RIPE / APNIC / LACNIC / AFRINIC
@@ -192,7 +191,6 @@ export function emptyIntelligence(ip: string): IpIntelligence {
     is_crawler: null,
     is_anycast: null,
     is_relay: null,
-    is_residential_proxy: null,
     rir: null,
     allocation_cidr: null,
     allocation_date: null,

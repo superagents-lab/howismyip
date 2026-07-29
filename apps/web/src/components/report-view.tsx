@@ -149,22 +149,19 @@ function EvidenceDetails({
 
 function FactGrid({
 	facts,
-	contextEvidence,
 	t,
 	expandedFact,
 	setExpandedFact,
 }: {
 	facts: FactSummary[];
-	contextEvidence: Partial<Record<FactKey, ContextEvidence>>;
 	t: Dictionary;
 	expandedFact: string | null;
 	setExpandedFact: (key: string | null) => void;
 }) {
 	return (
-		<div className="grid items-start gap-x-6 gap-y-2 lg:grid-cols-2">
+		<div className="grid items-start gap-x-6 gap-y-2 sm:grid-cols-2">
 			{facts.map((fact) => {
 				const primary = primaryFactValue(fact);
-				const evidence = contextEvidence[fact.key];
 				const expanded = expandedFact === fact.key;
 				const toggle = () => setExpandedFact(expanded ? null : fact.key);
 				return (
@@ -183,9 +180,7 @@ function FactGrid({
 						<span className="text-muted text-xs">{t.fact[fact.key]}</span>
 						<span className="min-w-0">
 							<div className="break-words text-fg">
-								{primary
-									? displayedFactValue(fact.key, primary.value, t)
-									: t.provenance.unknown}
+								{primary && displayedFactValue(fact.key, primary.value, t)}
 							</div>
 							<div className="mt-0.5 flex flex-wrap items-center gap-2 text-muted text-[11px]">
 								<span>
@@ -194,47 +189,11 @@ function FactGrid({
 								{fact.conflict && (
 									<span className="text-amber">{t.report.conflict}</span>
 								)}
-								{(primary || evidence) && (
+								{primary && (
 									<span className="text-phosphor">{expanded ? "▾" : "▸"}</span>
 								)}
 							</div>
-							{evidence && (
-								<span
-									className={`mt-2 block border-l-2 pl-2 ${EVIDENCE_BORDER[evidence.tone]}`}
-								>
-									<span className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-										<span className="text-muted text-[11px]">
-											{evidence.label}
-										</span>
-										<span className="break-words text-fg text-xs">
-											{evidence.value}
-										</span>
-									</span>
-									<span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px]">
-										{evidence.meta.map((item) => (
-											<span
-												key={`${item.text}-${item.tone}`}
-												className={EVIDENCE_TONE[item.tone]}
-											>
-												{item.text}
-											</span>
-										))}
-									</span>
-								</span>
-							)}
-							{expanded && evidence && (
-								<EvidenceDetails
-									details={[
-										{
-											label: t.fact[fact.key],
-											fact: fact.values.length > 0 ? fact : undefined,
-										},
-										...evidence.details,
-									]}
-									t={t}
-								/>
-							)}
-							{expanded && primary && !evidence && (
+							{expanded && primary && (
 								<div className="mt-2 flex flex-wrap gap-1.5">
 									{primary.sources.map((source) => (
 										<span
@@ -250,6 +209,97 @@ function FactGrid({
 					</button>
 				);
 			})}
+		</div>
+	);
+}
+
+function EvidenceStripRow({
+	id,
+	evidence,
+	t,
+	expanded,
+	onToggle,
+}: {
+	id: string;
+	evidence: ContextEvidence;
+	t: Dictionary;
+	expanded: boolean;
+	onToggle: () => void;
+}) {
+	return (
+		<button
+			type="button"
+			data-testid={`network-evidence-${id}`}
+			aria-expanded={expanded}
+			onClick={onToggle}
+			className={`grid w-full cursor-pointer grid-cols-[6rem_minmax(0,1fr)] items-start gap-3 border px-2 py-2.5 text-left outline-none hover:bg-panel-2/60 focus-visible:bg-panel-2 focus-visible:ring-1 focus-visible:ring-phosphor-dim ${
+				expanded
+					? "border-phosphor-dim bg-panel-2/70"
+					: "border-transparent border-b-border/50"
+			}`}
+		>
+			<span
+				className={`border-l-2 pl-2 text-xs ${EVIDENCE_BORDER[evidence.tone]}`}
+			>
+				{evidence.label}
+			</span>
+			<span className="min-w-0">
+				<span className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+					<span className="break-words text-fg">{evidence.value}</span>
+					{evidence.meta.map((item) => (
+						<span
+							key={`${item.text}-${item.tone}`}
+							className={`text-[11px] ${EVIDENCE_TONE[item.tone]}`}
+						>
+							{item.text}
+						</span>
+					))}
+					<span className="text-phosphor text-[11px]">
+						{expanded ? "▾" : "▸"}
+					</span>
+				</span>
+				{expanded && <EvidenceDetails details={evidence.details} t={t} />}
+			</span>
+		</button>
+	);
+}
+
+function NetworkEvidenceBar({
+	contextEvidence,
+	t,
+}: {
+	contextEvidence: Partial<Record<FactKey, ContextEvidence>>;
+	t: Dictionary;
+}) {
+	const [expanded, setExpanded] = useState<string | null>(null);
+	const rows = [
+		{ id: "registration", evidence: contextEvidence.country },
+		{ id: "route", evidence: contextEvidence.asn },
+	].filter((row): row is { id: string; evidence: ContextEvidence } =>
+		Boolean(row.evidence),
+	);
+
+	if (rows.length === 0) {
+		return null;
+	}
+
+	return (
+		<div
+			data-testid="network-evidence"
+			className="mt-3 border-border border-t pt-1"
+		>
+			{rows.map(({ id, evidence }) => (
+				<EvidenceStripRow
+					key={id}
+					id={id}
+					evidence={evidence}
+					t={t}
+					expanded={expanded === id}
+					onToggle={() =>
+						setExpanded((current) => (current === id ? null : id))
+					}
+				/>
+			))}
 		</div>
 	);
 }
@@ -425,17 +475,6 @@ function BasicFacts({ report, t }: { report: IpReport; t: Dictionary }) {
 			.map((fact) => [fact.key, fact]),
 	);
 
-	for (const key of ["country", "asn"] as const) {
-		if (contextEvidence[key] && !identityByKey.has(key)) {
-			identityByKey.set(key, {
-				key,
-				values: [],
-				source_count: 0,
-				conflict: false,
-			});
-		}
-	}
-
 	const identity = BASIC_FACT_ORDER.flatMap((key) => {
 		const fact = identityByKey.get(key);
 		return fact ? [fact] : [];
@@ -449,7 +488,6 @@ function BasicFacts({ report, t }: { report: IpReport; t: Dictionary }) {
 			{identity.length > 0 ? (
 				<FactGrid
 					facts={identity}
-					contextEvidence={contextEvidence}
 					t={t}
 					expandedFact={expandedFact}
 					setExpandedFact={setExpandedFact}
@@ -457,6 +495,7 @@ function BasicFacts({ report, t }: { report: IpReport; t: Dictionary }) {
 			) : (
 				<p className="text-muted text-xs">{t.report.noFacts}</p>
 			)}
+			<NetworkEvidenceBar contextEvidence={contextEvidence} t={t} />
 		</section>
 	);
 }

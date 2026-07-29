@@ -20,7 +20,6 @@ const TONE_CLASS: Record<Tone, string> = {
 };
 
 const FLAG_KEYS: Array<[keyof IpIntelligence, keyof Dictionary["signal"]]> = [
-	["is_residential_proxy", "residentialProxy"],
 	["is_proxy", "proxy"],
 	["is_vpn", "vpn"],
 	["is_tor", "tor"],
@@ -41,7 +40,6 @@ const DETAIL_FLAG_KEYS: Array<
 const VERDICT_SIGNAL_KEYS: Array<
 	[keyof IpIntelligence, keyof Dictionary["signal"]]
 > = [
-	["is_residential_proxy", "residentialProxy"],
 	["is_vpn", "vpn"],
 	["is_tor", "tor"],
 	["is_proxy", "proxy"],

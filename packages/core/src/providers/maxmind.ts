@@ -147,7 +147,6 @@ export function parseMaxMindMinFraudResponse(
       traits.is_anonymous_proxy,
       traits.is_anonymous,
     ]),
-    is_residential_proxy: yesNoToBool(traits.is_residential_proxy),
     is_vpn: yesNoToBool(traits.is_anonymous_vpn),
     is_tor: yesNoToBool(traits.is_tor_exit_node),
     is_hosting: isHosting,

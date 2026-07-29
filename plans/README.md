@@ -23,6 +23,7 @@ Ask the advisor to plan any of them if wanted.
 | 006  | Add free network-provenance intelligence | P1 | L | 003, 004 | DONE — verified locally (2026-07-28) |
 | 007  | Reduce registration and routing redundancy | P1 | M | 006 | DONE — verified locally (2026-07-28) |
 | 008  | Integrate network evidence into basic facts | P1 | S | 007 | DONE — verified locally (2026-07-29) |
+| 009  | Preserve basic fact grid alignment | P1 | S | 008 | DONE — verified locally (2026-07-29) |
 
 > All four plans reviewed via `/improve execute` and merged into `main` (HEAD `6ab8f2d`).
 > Final integration verification: 28 core tests pass, web typecheck/lint/build all clean.

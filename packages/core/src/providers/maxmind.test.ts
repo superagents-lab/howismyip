@@ -53,14 +53,13 @@ test('maxmind: maps minFraud IP risk and Insights traits', () => {
   assert.equal(result.proxy_type, 'Anonymous VPN');
   assert.equal(result.connection_type, 'Corporate');
   assert.equal(result.is_proxy, true);
-  assert.equal(result.is_residential_proxy, false);
   assert.equal(result.is_vpn, true);
   assert.equal(result.is_tor, false);
   assert.equal(result.is_hosting, false);
   assert.deepEqual(result.risk_reasons, ['MaxMind IP reason: ANONYMOUS_IP']);
 });
 
-test('maxmind: residential proxy flag still marks is_proxy when public proxy is false', () => {
+test('maxmind: rolls a residential proxy into the generic proxy signal', () => {
   const result = parseMaxMindMinFraudResponse({
     ip_address: {
       risk: '45.5',
@@ -75,7 +74,6 @@ test('maxmind: residential proxy flag still marks is_proxy when public proxy is 
   assert.equal(result.risk_level, 'medium');
   assert.equal(result.proxy_type, 'Residential proxy');
   assert.equal(result.is_proxy, true);
-  assert.equal(result.is_residential_proxy, true);
 });
 
 test('maxmind: provider posts minimal minFraud Score request with basic auth', async () => {

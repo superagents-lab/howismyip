@@ -63,7 +63,6 @@ report model can represent pending/unreliable sub-checks without false claims.
   - `origin_asns`
   - `origin_holders`
   - `rpki_status`
-- Add `is_residential_proxy` as a first-class risk signal.
 - Add factual summary keys for registration country, network prefix, PTR,
   announcement, origin ASN/holder, and RPKI.
 
@@ -71,8 +70,8 @@ report model can represent pending/unreliable sub-checks without false claims.
 
 - RDAP and Team Cymru populate `registered_country_code`, not geolocation
   `country_code`.
-- MaxMind and IP2Location preserve residential-proxy detections in the new
-  normalized field.
+- Supplier-specific residential-proxy detections remain upstream evidence for
+  the generic proxy signal; they are not exposed as a normalized field.
 
 ### New free supplier
 
@@ -90,7 +89,6 @@ payload/error retained for audit.
 
 - Show geolocation and registration country as separate facts.
 - Show the new network-provenance facts in the existing basic-facts section.
-- Add residential proxy to the per-source risk signal matrix.
 - Keep the existing design system; no redesign.
 
 ### Quota and documentation

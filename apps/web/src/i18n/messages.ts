@@ -144,7 +144,6 @@ const en = {
 		mobile: "mobile",
 		anycast: "anycast",
 		relay: "relay",
-		residentialProxy: "residential proxy",
 	},
 	fields: {
 		country: "country",
@@ -313,7 +312,6 @@ const zh: Dictionary = {
 		mobile: "移动",
 		anycast: "Anycast",
 		relay: "中继",
-		residentialProxy: "住宅代理",
 	},
 	fields: {
 		country: "国家",
