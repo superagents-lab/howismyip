@@ -11,7 +11,7 @@ export function staticIspUrl(locale: "en" | "zh") {
 		utm_campaign: "static_isp",
 		utm_content: "footer_credit",
 	});
-	return `https://www.search1api.com${path}?${params}`;
+	return `https://s1.dev${path}?${params}`;
 }
 
 /** A restrained ownership credit and related-product entry point. */

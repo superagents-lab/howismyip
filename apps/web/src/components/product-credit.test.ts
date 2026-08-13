@@ -4,6 +4,7 @@ import { staticIspUrl } from "./product-credit";
 describe("staticIspUrl", () => {
 	it("builds a tracked Chinese product URL", () => {
 		const url = new URL(staticIspUrl("zh"));
+		expect(url.host).toBe("s1.dev");
 		expect(url.pathname).toBe("/zh/proxies/static-isp");
 		expect(Object.fromEntries(url.searchParams)).toEqual({
 			utm_source: "howismyip",

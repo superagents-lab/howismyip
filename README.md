@@ -225,7 +225,7 @@ pnpm format       # same, applying safe fixes
 ## Sponsor
 
 howismyip is sponsored by
-**[Search1API](https://www.search1api.com/proxies/static-isp?utm_source=howismyip&utm_medium=referral&utm_campaign=static_isp&utm_content=readme_sponsor)**,
+**[Search1API](https://s1.dev/proxies/static-isp?utm_source=howismyip&utm_medium=referral&utm_campaign=static_isp&utm_content=readme_sponsor)**,
 which provides customizable static ISP proxies that you can filter for zero
 fraud scores from the IP intelligence providers you trust.
 
