@@ -517,17 +517,17 @@ export function ReportView({ report }: { report: IpReport }) {
 		});
 	}
 
-	// Skipped sources stay visible: a paused provider (daily quota spent) is
-	// information the matrix should show, not hide.
+	// Only sources that actually returned an assessment are shown. A provider
+	// paused because its quota is spent (status "skipped") says nothing about
+	// this IP, so it stays out of the matrix — it remains in the raw report and
+	// the JSON API for anyone who needs to know what wasn't consulted.
 	const riskSources = report.sources.filter(
 		(s) =>
 			(s.category === "risk" || s.category === "blocklist") &&
-			((s.status === "ok" && s.data) || s.status === "skipped"),
+			s.status === "ok" &&
+			s.data,
 	);
-	const evaluatedRiskSources = riskSources.filter(
-		(source) => source.status === "ok" && source.data,
-	);
-	const observedRiskLevels = evaluatedRiskSources.flatMap((source) =>
+	const observedRiskLevels = riskSources.flatMap((source) =>
 		source.data?.risk_level ? [source.data.risk_level] : [],
 	);
 	const highRiskCount = observedRiskLevels.filter(
@@ -582,7 +582,7 @@ export function ReportView({ report }: { report: IpReport }) {
 								highRiskCount > 0 ? "text-danger text-xs" : "text-muted text-xs"
 							}
 						>
-							{t.report.riskSummary(highRiskCount, evaluatedRiskSources.length)}
+							{t.report.riskSummary(highRiskCount, riskSources.length)}
 						</span>
 					</div>
 					<RiskMatrix sources={riskSources} />

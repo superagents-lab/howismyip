@@ -10,8 +10,9 @@
  * prepaid balances that never refill on their own, e.g. MaxMind). A provider
  * whose budget (set in the `HOWISMYIP_DAILY_BUDGETS` table, e.g.
  * `proxycheck:900`) is spent for its current period is skipped for the rest
- * of it and reported as status "skipped", so the UI/API stay transparent
- * about what was and wasn't consulted.
+ * of it and recorded as status "skipped" — the report and JSON API keep that
+ * row so it's clear what wasn't consulted, while the UI leaves it out of the
+ * risk matrix rather than showing a source with nothing to say.
  *
  * Everything FAILS OPEN: no budgets configured, no binding (plain Node dev),
  * or any DO error → no skips, the lookup runs in full.
