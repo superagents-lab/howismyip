@@ -3,18 +3,25 @@ import type { Locale } from "../i18n/messages";
 export const SITE_ORIGIN = "https://howismyip.xyz";
 export const OG_IMAGE_URL = `${SITE_ORIGIN}/og-image.png`;
 
+/** URL of the dynamic per-IP Open Graph image (server-rendered PNG). */
+export function ogImageUrlForIp(ip: string): string {
+	return `${SITE_ORIGIN}/og/${encodeURIComponent(ip)}.png`;
+}
+
 export function buildSocialMeta({
 	title,
 	description,
 	url,
 	imageAlt,
 	locale,
+	ogImage = OG_IMAGE_URL,
 }: {
 	title: string;
 	description: string;
 	url: string;
 	imageAlt: string;
 	locale: Locale;
+	ogImage?: string;
 }) {
 	return [
 		{ title },
@@ -25,8 +32,8 @@ export function buildSocialMeta({
 		{ property: "og:title", content: title },
 		{ property: "og:description", content: description },
 		{ property: "og:url", content: url },
-		{ property: "og:image", content: OG_IMAGE_URL },
-		{ property: "og:image:secure_url", content: OG_IMAGE_URL },
+		{ property: "og:image", content: ogImage },
+		{ property: "og:image:secure_url", content: ogImage },
 		{ property: "og:image:type", content: "image/png" },
 		{ property: "og:image:width", content: "1200" },
 		{ property: "og:image:height", content: "630" },
@@ -34,7 +41,7 @@ export function buildSocialMeta({
 		{ name: "twitter:card", content: "summary_large_image" },
 		{ name: "twitter:title", content: title },
 		{ name: "twitter:description", content: description },
-		{ name: "twitter:image", content: OG_IMAGE_URL },
+		{ name: "twitter:image", content: ogImage },
 		{ name: "twitter:image:alt", content: imageAlt },
 	];
 }

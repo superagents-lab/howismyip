@@ -12,7 +12,11 @@ import {
 	type LookupOutcome,
 	trackLookupCompleted,
 } from "../../lib/analytics";
-import { buildSocialMeta, SITE_ORIGIN } from "../../lib/social-meta";
+import {
+	buildSocialMeta,
+	ogImageUrlForIp,
+	SITE_ORIGIN,
+} from "../../lib/social-meta";
 import { type LookupResult, lookupIpFn } from "../../server/lookup";
 
 export const Route = createFileRoute("/$lang/$ip")({
@@ -29,6 +33,7 @@ export const Route = createFileRoute("/$lang/$ip")({
 				url,
 				imageAlt: dict.meta.imageAlt,
 				locale,
+				ogImage: ogImageUrlForIp(params.ip),
 			}),
 			links: [{ rel: "canonical", href: url }],
 		};

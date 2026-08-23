@@ -6,6 +6,7 @@ export type LookupEntrypoint =
 	| "self_server_fn"
 	| "api_ip"
 	| "api_me"
+	| "og_image"
 	| "unknown";
 
 type UpstreamStatus = ProviderResult["status"];

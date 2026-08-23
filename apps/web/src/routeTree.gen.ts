@@ -9,21 +9,22 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as LangRouteRouteImport } from './routes/$lang/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as LangRouteRouteImport } from './routes/$lang/route'
 import { Route as LangIndexRouteImport } from './routes/$lang/index'
-import { Route as ApiMeRouteImport } from './routes/api/me'
 import { Route as LangIpRouteImport } from './routes/$lang/$ip'
+import { Route as ApiMeRouteImport } from './routes/api/me'
+import { Route as OgSplatRouteImport } from './routes/og/$'
 import { Route as ApiIpIpRouteImport } from './routes/api/ip.$ip'
 
-const LangRouteRoute = LangRouteRouteImport.update({
-  id: '/$lang',
-  path: '/$lang',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LangRouteRoute = LangRouteRouteImport.update({
+  id: '/$lang',
+  path: '/$lang',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LangIndexRoute = LangIndexRouteImport.update({
@@ -31,15 +32,20 @@ const LangIndexRoute = LangIndexRouteImport.update({
   path: '/',
   getParentRoute: () => LangRouteRoute,
 } as any)
+const LangIpRoute = LangIpRouteImport.update({
+  id: '/$ip',
+  path: '/$ip',
+  getParentRoute: () => LangRouteRoute,
+} as any)
 const ApiMeRoute = ApiMeRouteImport.update({
   id: '/api/me',
   path: '/api/me',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LangIpRoute = LangIpRouteImport.update({
-  id: '/$ip',
-  path: '/$ip',
-  getParentRoute: () => LangRouteRoute,
+const OgSplatRoute = OgSplatRouteImport.update({
+  id: '/og/$',
+  path: '/og/$',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiIpIpRoute = ApiIpIpRouteImport.update({
   id: '/api/ip/$ip',
@@ -52,6 +58,7 @@ export interface FileRoutesByFullPath {
   '/$lang': typeof LangRouteRouteWithChildren
   '/$lang/$ip': typeof LangIpRoute
   '/api/me': typeof ApiMeRoute
+  '/og/$': typeof OgSplatRoute
   '/$lang/': typeof LangIndexRoute
   '/api/ip/$ip': typeof ApiIpIpRoute
 }
@@ -59,6 +66,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$lang/$ip': typeof LangIpRoute
   '/api/me': typeof ApiMeRoute
+  '/og/$': typeof OgSplatRoute
   '/$lang': typeof LangIndexRoute
   '/api/ip/$ip': typeof ApiIpIpRoute
 }
@@ -68,6 +76,7 @@ export interface FileRoutesById {
   '/$lang': typeof LangRouteRouteWithChildren
   '/$lang/$ip': typeof LangIpRoute
   '/api/me': typeof ApiMeRoute
+  '/og/$': typeof OgSplatRoute
   '/$lang/': typeof LangIndexRoute
   '/api/ip/$ip': typeof ApiIpIpRoute
 }
@@ -78,16 +87,18 @@ export interface FileRouteTypes {
     | '/$lang'
     | '/$lang/$ip'
     | '/api/me'
+    | '/og/$'
     | '/$lang/'
     | '/api/ip/$ip'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/$lang/$ip' | '/api/me' | '/$lang' | '/api/ip/$ip'
+  to: '/' | '/$lang/$ip' | '/api/me' | '/og/$' | '/$lang' | '/api/ip/$ip'
   id:
     | '__root__'
     | '/'
     | '/$lang'
     | '/$lang/$ip'
     | '/api/me'
+    | '/og/$'
     | '/$lang/'
     | '/api/ip/$ip'
   fileRoutesById: FileRoutesById
@@ -96,23 +107,24 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LangRouteRoute: typeof LangRouteRouteWithChildren
   ApiMeRoute: typeof ApiMeRoute
+  OgSplatRoute: typeof OgSplatRoute
   ApiIpIpRoute: typeof ApiIpIpRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/$lang': {
-      id: '/$lang'
-      path: '/$lang'
-      fullPath: '/$lang'
-      preLoaderRoute: typeof LangRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$lang': {
+      id: '/$lang'
+      path: '/$lang'
+      fullPath: '/$lang'
+      preLoaderRoute: typeof LangRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/$lang/': {
@@ -122,6 +134,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LangIndexRouteImport
       parentRoute: typeof LangRouteRoute
     }
+    '/$lang/$ip': {
+      id: '/$lang/$ip'
+      path: '/$ip'
+      fullPath: '/$lang/$ip'
+      preLoaderRoute: typeof LangIpRouteImport
+      parentRoute: typeof LangRouteRoute
+    }
     '/api/me': {
       id: '/api/me'
       path: '/api/me'
@@ -129,12 +148,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/$lang/$ip': {
-      id: '/$lang/$ip'
-      path: '/$ip'
-      fullPath: '/$lang/$ip'
-      preLoaderRoute: typeof LangIpRouteImport
-      parentRoute: typeof LangRouteRoute
+    '/og/$': {
+      id: '/og/$'
+      path: '/og/$'
+      fullPath: '/og/$'
+      preLoaderRoute: typeof OgSplatRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/ip/$ip': {
       id: '/api/ip/$ip'
@@ -164,6 +183,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LangRouteRoute: LangRouteRouteWithChildren,
   ApiMeRoute: ApiMeRoute,
+  OgSplatRoute: OgSplatRoute,
   ApiIpIpRoute: ApiIpIpRoute,
 }
 export const routeTree = rootRouteImport
