@@ -1,14 +1,49 @@
 const GA_SCRIPT_ID = "howismyip-google-analytics";
 const GA_MEASUREMENT_ID_PATTERN = /^G-[A-Z0-9]+$/;
 
+const UMAMI_SCRIPT_ID = "howismyip-umami";
+const UMAMI_SCRIPT_SRC = "https://umami.fatwang2.com/script.js";
+const UMAMI_WEBSITE_ID = "e1996d0f-604d-4a79-a0ff-00b5afd627ec";
+const UMAMI_WEBSITE_ID_PATTERN =
+	/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 type Gtag = (...args: unknown[]) => void;
+
+type UmamiTrackPayload = Record<string, unknown>;
+type UmamiTrack = {
+	(payload?: UmamiTrackPayload): void;
+	(
+		payload: (
+			props: UmamiTrackPayload,
+		) => UmamiTrackPayload | false | null | undefined,
+	): void;
+	(eventName: string, data?: Record<string, unknown>): void;
+};
+
+type UmamiQueuedCommand =
+	| {
+			kind: "pageview";
+			url: string;
+			title: string;
+	  }
+	| {
+			kind: "event";
+			name: string;
+			url: string;
+			title: string;
+			data: Record<string, unknown>;
+	  };
 
 declare global {
 	interface Window {
 		dataLayer?: unknown[];
 		gtag?: Gtag;
+		umami?: { track: UmamiTrack };
 		__howismyipGaMeasurementId?: string;
 		__howismyipGaLastPagePath?: string;
+		__howismyipUmamiWebsiteId?: string;
+		__howismyipUmamiLastPagePath?: string;
+		__howismyipUmamiQueue?: UmamiQueuedCommand[];
 		__howismyipPendingLookup?: PendingLookup;
 	}
 }
@@ -67,6 +102,10 @@ export function isGaMeasurementId(value: string | undefined): value is string {
 	return GA_MEASUREMENT_ID_PATTERN.test(value ?? "");
 }
 
+export function isUmamiWebsiteId(value: string | undefined): value is string {
+	return UMAMI_WEBSITE_ID_PATTERN.test(value ?? "");
+}
+
 export function inferIpVersion(
 	value: string | null | undefined,
 ): LookupIpVersion {
@@ -77,8 +116,8 @@ export function inferIpVersion(
 }
 
 /**
- * Keeps GA page context useful without sending a queried IP (or arbitrary
- * query/hash values) to Google.
+ * Keeps analytics page context useful without sending a queried IP (or arbitrary
+ * query/hash values) to third-party trackers.
  */
 export function getAnalyticsPageContext(
 	routeHref: string,
@@ -96,6 +135,77 @@ export function getAnalyticsPageContext(
 		page_path: pagePath,
 		page_title: isIpReport ? "IP report · howismyip" : doc.title,
 	};
+}
+
+function routeKeyFor(routeHref: string, win: Window): string {
+	const location = new URL(routeHref, win.location.origin);
+	return `${location.pathname}${location.search}${location.hash}`;
+}
+
+function runUmamiCommand(win: Window, command: UmamiQueuedCommand): boolean {
+	const track = win.umami?.track;
+	if (!track) return false;
+
+	if (command.kind === "pageview") {
+		track((props) => ({
+			...props,
+			url: command.url,
+			title: command.title,
+		}));
+		return true;
+	}
+
+	track((props) => ({
+		...props,
+		name: command.name,
+		url: command.url,
+		title: command.title,
+		data: command.data,
+	}));
+	return true;
+}
+
+function flushUmamiQueue(win: Window): void {
+	const queue = win.__howismyipUmamiQueue;
+	if (!queue?.length || !win.umami?.track) return;
+	win.__howismyipUmamiQueue = [];
+	for (const command of queue) {
+		runUmamiCommand(win, command);
+	}
+}
+
+function enqueueUmami(win: Window, command: UmamiQueuedCommand): boolean {
+	if (!win.__howismyipUmamiWebsiteId) return false;
+	if (runUmamiCommand(win, command)) return true;
+	win.__howismyipUmamiQueue = win.__howismyipUmamiQueue ?? [];
+	win.__howismyipUmamiQueue.push(command);
+	return true;
+}
+
+function trackUmamiPageView(
+	context: AnalyticsPageContext,
+	win: Window,
+): boolean {
+	return enqueueUmami(win, {
+		kind: "pageview",
+		url: context.page_path,
+		title: context.page_title,
+	});
+}
+
+function trackUmamiEvent(
+	name: string,
+	data: Record<string, unknown>,
+	context: AnalyticsPageContext,
+	win: Window,
+): boolean {
+	return enqueueUmami(win, {
+		kind: "event",
+		name,
+		url: context.page_path,
+		title: context.page_title,
+		data,
+	});
 }
 
 /**
@@ -142,27 +252,74 @@ export function initializeGoogleAnalytics(
 	return true;
 }
 
-/** Sends one GA4 page_view for each distinct SPA path. */
+/**
+ * Loads the Umami tracker with automatic pageviews disabled so SPA routes can
+ * send privacy-safe URLs (IP report paths redacted to `/:ip`).
+ */
+export function initializeUmami(
+	websiteId: string | undefined = UMAMI_WEBSITE_ID,
+	scriptSrc: string = UMAMI_SCRIPT_SRC,
+	win: Window = window,
+	doc: Document = document,
+): boolean {
+	if (!isUmamiWebsiteId(websiteId)) return false;
+
+	if (win.__howismyipUmamiWebsiteId) {
+		return win.__howismyipUmamiWebsiteId === websiteId;
+	}
+
+	win.__howismyipUmamiWebsiteId = websiteId;
+	win.__howismyipUmamiQueue = win.__howismyipUmamiQueue ?? [];
+
+	if (!doc.getElementById(UMAMI_SCRIPT_ID)) {
+		const script = doc.createElement("script");
+		script.id = UMAMI_SCRIPT_ID;
+		script.defer = true;
+		script.src = scriptSrc;
+		script.dataset.websiteId = websiteId;
+		script.dataset.autoPageview = "false";
+		script.addEventListener("load", () => {
+			flushUmamiQueue(win);
+		});
+		doc.head.appendChild(script);
+	} else {
+		flushUmamiQueue(win);
+	}
+
+	return true;
+}
+
+/** Sends one page_view to each configured tracker for each distinct SPA path. */
 export function trackPageView(
 	routeHref: string,
 	win: Window = window,
 	doc: Document = document,
 ): boolean {
-	if (!win.gtag || !win.__howismyipGaMeasurementId) return false;
-
 	const location = new URL(routeHref, win.location.origin);
-	const routeKey = `${location.pathname}${location.search}${location.hash}`;
-	if (win.__howismyipGaLastPagePath === routeKey) return false;
+	const routeKey = routeKeyFor(routeHref, win);
+	const context = getAnalyticsPageContext(location.href, win, doc);
+	let sent = false;
 
-	win.__howismyipGaLastPagePath = routeKey;
-	win.gtag("event", "page_view", {
-		...getAnalyticsPageContext(location.href, win, doc),
-	});
-	return true;
+	if (win.gtag && win.__howismyipGaMeasurementId) {
+		if (win.__howismyipGaLastPagePath !== routeKey) {
+			win.__howismyipGaLastPagePath = routeKey;
+			win.gtag("event", "page_view", { ...context });
+			sent = true;
+		}
+	}
+
+	if (win.__howismyipUmamiWebsiteId) {
+		if (win.__howismyipUmamiLastPagePath !== routeKey) {
+			win.__howismyipUmamiLastPagePath = routeKey;
+			if (trackUmamiPageView(context, win)) sent = true;
+		}
+	}
+
+	return sent;
 }
 
 /**
- * Starts an in-memory lookup timer and sends a low-cardinality GA4 event.
+ * Starts an in-memory lookup timer and sends a low-cardinality event.
  * The queried IP is deliberately not retained or sent.
  */
 export function trackLookupStarted(
@@ -177,13 +334,26 @@ export function trackLookupStarted(
 		ipVersion: lookup.ipVersion,
 	};
 
-	if (!win.gtag || !win.__howismyipGaMeasurementId) return false;
-	win.gtag("event", "ip_lookup_started", {
+	const context = getAnalyticsPageContext(win.location.href, win, doc);
+	const data = {
 		lookup_mode: lookup.mode,
 		ip_version: lookup.ipVersion,
-		...getAnalyticsPageContext(win.location.href, win, doc),
-	});
-	return true;
+	};
+	let sent = false;
+
+	if (win.gtag && win.__howismyipGaMeasurementId) {
+		win.gtag("event", "ip_lookup_started", {
+			...data,
+			...context,
+		});
+		sent = true;
+	}
+
+	if (trackUmamiEvent("ip_lookup_started", data, context, win)) {
+		sent = true;
+	}
+
+	return sent;
 }
 
 /** Starts a direct-route timer without replacing a click/scan timer. */
@@ -211,8 +381,6 @@ export function trackLookupCompleted(
 	if (!pending) return false;
 	win.__howismyipPendingLookup = undefined;
 
-	if (!win.gtag || !win.__howismyipGaMeasurementId) return false;
-
 	const providers = lookup.providers ?? [];
 	let slowest: LookupProviderTiming | null = null;
 	let okCount = 0;
@@ -236,7 +404,8 @@ export function trackLookupCompleted(
 		}
 	}
 
-	win.gtag("event", "ip_lookup_completed", {
+	const context = getAnalyticsPageContext(win.location.href, win, doc);
+	const data = {
 		lookup_mode: pending.mode,
 		ip_version:
 			lookup.ipVersion && lookup.ipVersion !== "unknown"
@@ -261,9 +430,22 @@ export function trackLookupCompleted(
 					slowest_provider_ms: Math.max(0, Math.round(slowest.durationMs)),
 				}
 			: {}),
-		...getAnalyticsPageContext(win.location.href, win, doc),
-	});
-	return true;
+	};
+	let sent = false;
+
+	if (win.gtag && win.__howismyipGaMeasurementId) {
+		win.gtag("event", "ip_lookup_completed", {
+			...data,
+			...context,
+		});
+		sent = true;
+	}
+
+	if (trackUmamiEvent("ip_lookup_completed", data, context, win)) {
+		sent = true;
+	}
+
+	return sent;
 }
 
 /** Conversion-oriented event for links from howismyip to related products. */
@@ -272,14 +454,26 @@ export function trackRelatedProductClick(
 	win: Window = window,
 	doc: Document = document,
 ): boolean {
-	if (!win.gtag || !win.__howismyipGaMeasurementId) return false;
-
-	win.gtag("event", "related_product_click", {
+	const context = getAnalyticsPageContext(win.location.href, win, doc);
+	const data = {
 		product: click.product,
 		placement: click.placement,
 		link_url: click.destination,
 		language: click.language,
-		...getAnalyticsPageContext(win.location.href, win, doc),
-	});
-	return true;
+	};
+	let sent = false;
+
+	if (win.gtag && win.__howismyipGaMeasurementId) {
+		win.gtag("event", "related_product_click", {
+			...data,
+			...context,
+		});
+		sent = true;
+	}
+
+	if (trackUmamiEvent("related_product_click", data, context, win)) {
+		sent = true;
+	}
+
+	return sent;
 }

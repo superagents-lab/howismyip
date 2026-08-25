@@ -56,13 +56,18 @@ a Worker secret. Local/manual builds read it from `.env`; for Cloudflare
 Workers Builds, add it as a build variable. The app does not load Google's
 script in development or when this value is absent.
 
-GA4 receives privacy-safe `ip_lookup_started` and `ip_lookup_completed` events
-for user-perceived lookup timing. Event parameters include the lookup mode,
-IP version, outcome, cache status, provider counts, and duration, but never the
-queried IP or its unsanitized report URL. Cloudflare Workers Logs separately
-receive one structured `ip_lookup_completed` object per cached lookup call for
-server duration and upstream-provider diagnosis; those objects also exclude IP
-addresses, provider URLs, and raw error messages.
+Production builds also load Umami (`umami.fatwang2.com`) alongside GA4. Automatic
+Umami pageviews are disabled so SPA navigations send the same privacy-safe
+paths as GA (`/:ip` instead of the queried address).
+
+GA4 and Umami both receive privacy-safe `ip_lookup_started`,
+`ip_lookup_completed`, and `related_product_click` events for user-perceived
+lookup timing and related-product clicks. Event parameters include the lookup
+mode, IP version, outcome, cache status, provider counts, and duration, but
+never the queried IP or its unsanitized report URL. Cloudflare Workers Logs
+separately receive one structured `ip_lookup_completed` object per cached
+lookup call for server duration and upstream-provider diagnosis; those objects
+also exclude IP addresses, provider URLs, and raw error messages.
 
 Common optional secrets:
 
